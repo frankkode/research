@@ -242,6 +242,7 @@ EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
 DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='noreply@your-domain.com')
 
 # Logging configuration for production
+# Use console logging for Railway - file logging can cause issues in containerized environments
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -256,41 +257,30 @@ LOGGING = {
         },
     },
     'handlers': {
-        'file': {
+        'console': {
             'level': 'INFO',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': os.path.join(BASE_DIR, 'logs', 'django.log'),
-            'maxBytes': 15728640,  # 15MB
-            'backupCount': 10,
+            'class': 'logging.StreamHandler',
             'formatter': 'verbose',
         },
-        'console': {
-            'level': 'WARNING',
-            'class': 'logging.StreamHandler',
-            'formatter': 'simple',
-        },
-        'error_file': {
+        'error_console': {
             'level': 'ERROR',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': os.path.join(BASE_DIR, 'logs', 'error.log'),
-            'maxBytes': 15728640,  # 15MB
-            'backupCount': 10,
+            'class': 'logging.StreamHandler',
             'formatter': 'verbose',
         },
     },
     'loggers': {
         'django': {
-            'handlers': ['file', 'console'],
+            'handlers': ['console'],
             'level': 'INFO',
             'propagate': True,
         },
         'apps': {
-            'handlers': ['file', 'console'],
+            'handlers': ['console'],
             'level': 'INFO',
             'propagate': True,
         },
         'django.request': {
-            'handlers': ['error_file'],
+            'handlers': ['error_console'],
             'level': 'ERROR',
             'propagate': True,
         },
