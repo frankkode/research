@@ -1,0 +1,191 @@
+# Root level gitignore for research-study-platform
+
+# Environment variables (global)
+.env
+.env.local
+.env.production
+.env.staging
+.env.development
+.env.test
+
+# Database files
+*.sqlite3
+*.sqlite
+*.db
+
+# Logs
+logs/
+*.log
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Editor and IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Backup files
+*.bak
+*.backup
+*.tmp
+
+# Temporary directories
+tmp/
+temp/
+
+# Archive files
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+
+# Node modules
+node_modules/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Build directories
+build/
+dist/
+out/
+
+# Coverage reports
+coverage/
+.coverage
+htmlcov/
+
+# Test artifacts
+.pytest_cache/
+.tox/
+
+# Security and sensitive files
+secrets.txt
+api_keys.txt
+*.key
+*.pem
+*.crt
+
+# Documentation builds
+docs/_build/
+
+# Application specific
+research_data/
+exports/
+backups/
+participant_data/
+study_results/
+analytics_data/
+
+# Docker
+.dockerignore
+
+# Kubernetes
+*.yaml
+*.yml
+
+# Terraform
+*.tf
+*.tfstate
+*.tfstate.backup
+
+# Local development
+local_settings.py
+settings_local.py
+config_local.py
+dev_config.py
+
+# Package manager lock files (choose one to keep)
+# package-lock.json
+# yarn.lock
+# Pipfile.lock
+
+# Cache directories
+.cache/
+.npm/
+.yarn/
+
+# Runtime files
+*.pid
+*.seed
+*.pid.lock
+
+# Profiling and debugging
+*.prof
+*.pstats
+*.profile
+debug.log
+error.log
+
+# Media uploads
+media/
+uploads/
+
+# Static files (production)
+staticfiles/
+static/
+
+# Email backends
+sent_emails/
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# Redis
+dump.rdb
+
+# Webpack
+webpack-stats.json
+
+# Monitoring and metrics
+metrics.txt
+.sentryclirc
+
+# Let's Encrypt
+.well-known/
+
+# Search indexes
+whoosh_index/
+
+# Memory and core dumps
+*.hprof
+core.*
+*.memprof
+*.lprof
+
+# Application logs
+django.log
+app.log
+access.log
+
+# Jupyter notebooks
+.ipynb_checkpoints/
+
+# Research study specific exclusions
+study_config_local.json
+participant_list.csv
+study_exports/
+research_exports/
