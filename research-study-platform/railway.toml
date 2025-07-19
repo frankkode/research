@@ -2,7 +2,7 @@
 builder = "NIXPACKS"
 
 [deploy]
-startCommand = "cd backend && python manage.py migrate && python manage.py collectstatic --noinput && gunicorn research_platform.wsgi:application"
+startCommand = "cd research-study-platform/backend && python manage.py migrate && python manage.py collectstatic --noinput && gunicorn research_platform.wsgi:application"
 healthcheckPath = "/admin/"
 healthcheckTimeout = 100
 restartPolicyType = "ON_FAILURE"
