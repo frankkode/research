@@ -78,12 +78,16 @@ WSGI_APPLICATION = 'research_platform.wsgi.application'
 
 import dj_database_url
 
-# Use Railway DATABASE_URL if available, otherwise use SQLite for development
-if env('DATABASE_URL', default=None):
+# Database Configuration - Railway provides DATABASE_URL
+DATABASE_URL = env('DATABASE_URL', default=None)
+
+if DATABASE_URL:
+    # Railway or other cloud database URL
     DATABASES = {
-        'default': dj_database_url.parse(env('DATABASE_URL'))
+        'default': dj_database_url.parse(DATABASE_URL)
     }
 else:
+    # SQLite for local development
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',

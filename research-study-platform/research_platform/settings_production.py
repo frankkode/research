@@ -88,24 +88,20 @@ WSGI_APPLICATION = 'research_platform.wsgi.application'
 # Railway provides DATABASE_URL, we'll use dj-database-url to parse it
 import dj_database_url
 
-if env('DATABASE_URL', default=None):
-    # Railway or other cloud database URL
+# Database Configuration - Railway provides DATABASE_URL
+DATABASE_URL = env('DATABASE_URL', default=None)
+
+if DATABASE_URL:
+    # Railway or other cloud database URL (preferred)
     DATABASES = {
-        'default': dj_database_url.parse(env('DATABASE_URL'))
+        'default': dj_database_url.parse(DATABASE_URL)
     }
 else:
-    # Manual PostgreSQL configuration
+    # Fallback to SQLite for development/testing
     DATABASES = {
         'default': {
-            'ENGINE': env('DB_ENGINE', default='django.db.backends.postgresql'),
-            'NAME': env('DB_NAME'),
-            'USER': env('DB_USER'),
-            'PASSWORD': env('DB_PASSWORD'),
-            'HOST': env('DB_HOST', default='localhost'),
-            'PORT': env('DB_PORT', default='5432'),
-            'OPTIONS': {
-                'sslmode': 'require',
-            },
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
 
