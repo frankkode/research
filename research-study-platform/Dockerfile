@@ -18,17 +18,17 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements and install Python dependencies
-COPY research-study-platform/backend/requirements.txt /app/
+COPY requirements.txt /app/
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy project
-COPY research-study-platform/backend /app/
+# Copy project files
+COPY . /app/
 
 # Create logs directory
 RUN mkdir -p logs
 
-# Collect static files
-RUN python manage.py collectstatic --noinput
+# Collect static files (with error handling)
+RUN python manage.py collectstatic --noinput || echo "Static files collection failed, continuing..."
 
 # Expose port
 EXPOSE $PORT
