@@ -1,0 +1,51 @@
+# Frontend files (not needed for backend deployment)
+frontend/
+nginx/
+docs/
+scripts/
+
+# Development files
+*.backup
+venv/
+.env
+.env.example
+db.sqlite3
+*.log
+
+# Testing files
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Documentation
+*.md
+!README.md
+
+# Git files
+.git/
+.gitignore
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Docker files
+Dockerfile*
+docker-compose*
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Media files (if any)
+media/uploads/
+
+# Backup files
+*.bak
+*.backup
