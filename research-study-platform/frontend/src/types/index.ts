@@ -240,6 +240,7 @@ export interface AuthContextType {
   token: string | null;
   login: (credentials: LoginCredentials) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
+  googleAuth: (token: string, studyGroup?: string) => Promise<AuthResponse & { created: boolean }>;
   logout: () => void;
   refreshUser: () => Promise<User | void>;
   isAuthenticated: boolean;

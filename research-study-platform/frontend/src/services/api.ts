@@ -15,7 +15,12 @@ import {
   CostLimits
 } from '../types';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://research-production-46af.up.railway.app';
+const API_BASE_URL = 'http://localhost:8000/api';
+
+// Debug log to see what URL is being used
+console.log('API_BASE_URL:', API_BASE_URL);
+console.log('REACT_APP_API_URL env:', process.env.REACT_APP_API_URL);
+console.log('Cache buster:', Date.now());
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -48,50 +53,56 @@ api.interceptors.response.use(
 
 export const authApi = {
   register: (data: RegisterData) => 
-    api.post<AuthResponse>('/auth/register/', data),
+    api.post<AuthResponse>('auth/register/', data),
   
   login: (data: LoginCredentials) =>
-    api.post<AuthResponse>('/auth/login/', data),
+    api.post<AuthResponse>('auth/login/', data),
   
-  logout: () => api.post('/auth/logout/'),
+  googleAuth: (token: string, studyGroup: string = 'PDF') =>
+    api.post<AuthResponse & { created: boolean }>('auth/google-auth/', { 
+      token, 
+      study_group: studyGroup 
+    }),
   
-  getProfile: () => api.get<User>('/auth/profile/'),
+  logout: () => api.post('auth/logout/'),
+  
+  getProfile: () => api.get<User>('auth/profile/'),
   
   submitConsent: (agreed: boolean) => 
-    api.post('/auth/consent/', { agreed }),
+    api.post('auth/consent/', { agreed }),
   
   completeInteraction: () => 
-    api.post('/auth/complete-interaction/'),
+    api.post('auth/complete-interaction/'),
 };
 
 export const studyApi = {
-  getActiveStudies: () => api.get<Study[]>('/studies/active/'),
+  getActiveStudies: () => api.get<Study[]>('studies/active/'),
   
   joinStudy: (studyId: string) =>
-    api.post<StudySession>(`/studies/join/${studyId}/`),
+    api.post<StudySession>(`studies/join/${studyId}/`),
   
   createOrGetSession: (data: { user_agent: string }) =>
-    api.post<StudySession>('/studies/session/create/', data),
+    api.post<StudySession>('studies/session/create/', data),
   
-  getMySessions: () => api.get<StudySession[]>('/studies/my-sessions/'),
+  getMySessions: () => api.get<StudySession[]>('studies/my-sessions/'),
   
   getSession: (sessionId: string) => 
-    api.get<StudySession>(`/studies/session/${sessionId}/`),
+    api.get<StudySession>(`studies/session/${sessionId}/`),
   
   logEvent: (data: {
     session_id: string;
     log_type: string;
     event_data: any;
-  }) => api.post('/studies/log-event/', data),
+  }) => api.post('studies/log-event/', data),
   
   updatePhase: (sessionId: string, phase: string) =>
-    api.put(`/studies/session/${sessionId}/phase/`, { phase }),
+    api.put(`studies/session/${sessionId}/phase/`, { phase }),
   
   completeSession: (sessionId: string) =>
-    api.post(`/studies/session/${sessionId}/complete/`),
+    api.post(`studies/session/${sessionId}/complete/`),
   
   updateSessionTime: (sessionId: string, data: { time_spent: number; is_paused: boolean }) =>
-    api.post(`/studies/session/${sessionId}/time/`, data),
+    api.post(`studies/session/${sessionId}/time/`, data),
 };
 
 export const chatApi = {

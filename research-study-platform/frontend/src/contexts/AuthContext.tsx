@@ -56,6 +56,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const googleAuth = async (token: string, studyGroup?: string) => {
+    try {
+      const response = await authApi.googleAuth(token, studyGroup);
+      const { token: newToken, user: newUser } = response.data;
+      
+      setToken(newToken);
+      setUser(newUser);
+      localStorage.setItem('token', newToken);
+      localStorage.setItem('user', JSON.stringify(newUser));
+      
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  };
+
   const logout = () => {
     setToken(null);
     setUser(null);
@@ -100,6 +116,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       token, 
       login, 
       register, 
+      googleAuth,
       logout, 
       refreshUser,
       isAuthenticated, 

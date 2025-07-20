@@ -4,10 +4,11 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import LoadingSpinner from '../common/LoadingSpinner';
+import GoogleSignIn from './GoogleSignIn';
 import { LoginCredentials } from '../../types';
 
 const LoginForm: React.FC = () => {
-  const { login } = useAuth();
+  const { login, googleAuth } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   
@@ -28,6 +29,23 @@ const LoginForm: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleGoogleSuccess = async (token: string) => {
+    setIsLoading(true);
+    try {
+      const response = await googleAuth(token);
+      toast.success(response.created ? 'Account created successfully!' : 'Login successful!');
+      navigate('/dashboard');
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Google authentication failed');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleError = (error: string) => {
+    toast.error(error);
   };
 
   return (
@@ -99,6 +117,19 @@ const LoginForm: React.FC = () => {
                 'Sign in'
               )}
             </button>
+          </div>
+
+          <div className="flex items-center justify-center">
+            <div className="border-t border-gray-300 flex-grow mr-3"></div>
+            <span className="text-gray-500 text-sm">or</span>
+            <div className="border-t border-gray-300 flex-grow ml-3"></div>
+          </div>
+
+          <div>
+            <GoogleSignIn 
+              onSuccess={handleGoogleSuccess}
+              onError={handleGoogleError}
+            />
           </div>
 
           <div className="text-center">

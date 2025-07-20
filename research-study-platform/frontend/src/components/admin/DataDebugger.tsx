@@ -98,7 +98,7 @@ const DataDebugger: React.FC = () => {
           <div className="text-sm text-red-700 space-y-1">
             <p><strong>Backend Issues Detected:</strong></p>
             <ol className="list-decimal list-inside space-y-1 ml-4">
-              <li>Make sure Django server is running: <code className="bg-red-100 px-1 rounded">python manage.py runserver 8001</code></li>
+              <li>Make sure Django server is running: <code className="bg-red-100 px-1 rounded">python manage.py runserver 8000</code></li>
               <li>Check if you're logged in as admin user</li>
               <li>Verify database migrations: <code className="bg-red-100 px-1 rounded">python manage.py migrate</code></li>
               <li>Create test data: <code className="bg-red-100 px-1 rounded">python manage.py populate_test_data --participants 50</code></li>

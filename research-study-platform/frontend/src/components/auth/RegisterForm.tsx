@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import LoadingSpinner from '../common/LoadingSpinner';
+import GoogleSignIn from './GoogleSignIn';
 import { RegisterData } from '../../types';
 import { generateParticipantId, assignRandomGroup } from '../../utils/studyHelpers';
 
@@ -12,7 +13,7 @@ interface RegisterFormData extends RegisterData {
 }
 
 const RegisterForm: React.FC = () => {
-  const { register: registerUser } = useAuth();
+  const { register: registerUser, googleAuth } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   
@@ -21,6 +22,7 @@ const RegisterForm: React.FC = () => {
     handleSubmit,
     watch,
     setValue,
+    getValues,
     formState: { errors }
   } = useForm<RegisterFormData>();
 
@@ -51,6 +53,25 @@ const RegisterForm: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleGoogleSuccess = async (token: string) => {
+    setIsLoading(true);
+    try {
+      const studyGroup = getValues('study_group') || assignRandomGroup();
+      const response = await googleAuth(token, studyGroup);
+      
+      toast.success(response.created ? 'Account created successfully!' : 'Login successful!');
+      navigate('/dashboard');
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Google authentication failed');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleError = (error: string) => {
+    toast.error(error);
   };
 
   return (
@@ -216,6 +237,25 @@ const RegisterForm: React.FC = () => {
                 'Create Account'
               )}
             </button>
+          </div>
+
+          <div className="mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-gray-50 text-gray-500">Or</span>
+              </div>
+            </div>
+
+            <div className="mt-6">
+              <GoogleSignIn
+                onSuccess={handleGoogleSuccess}
+                onError={handleGoogleError}
+                text="Sign up with Google"
+              />
+            </div>
           </div>
 
           <div className="text-center">
