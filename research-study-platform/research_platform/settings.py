@@ -14,7 +14,7 @@ SECRET_KEY = env('SECRET_KEY', default='your-secret-key-here')
 
 DEBUG = env('DEBUG')
 
-ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['localhost', '127.0.0.1'])
+ALLOWED_HOSTS = ['localhost','127.0.0.1,0.0.0.0','gtpresearch.up.railway.app','https://gtpresearch.up.railway.app']
 
 DJANGO_APPS = [
     'django.contrib.admin',
