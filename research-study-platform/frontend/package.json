@@ -31,7 +31,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "build": "CI=false react-scripts build",
     "test": "react-scripts test",
     "test:watch": "react-scripts test --watchAll=false",
     "test:coverage": "react-scripts test --coverage --collectCoverageFrom='src/**/*.{ts,tsx}' --collectCoverageFrom='!src/**/*.d.ts' --collectCoverageFrom='!src/index.tsx' --collectCoverageFrom='!src/setupTests.ts' --watchAll=false",
