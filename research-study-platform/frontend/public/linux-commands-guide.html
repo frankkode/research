@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linux Commands Guide</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 40px;
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        h2 {
+            color: #34495e;
+            border-left: 4px solid #3498db;
+            padding-left: 15px;
+            margin-top: 30px;
+        }
+        .command {
+            background-color: #f4f4f4;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            color: #d73502;
+        }
+        .syntax {
+            background-color: #e8f5e8;
+            padding: 10px;
+            border-radius: 4px;
+            border-left: 4px solid #27ae60;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+        }
+        .example {
+            background-color: #fff3cd;
+            padding: 10px;
+            border-radius: 4px;
+            border-left: 4px solid #ffc107;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+        }
+        .description {
+            margin: 15px 0;
+            color: #555;
+        }
+        .tips {
+            background-color: #e7f3ff;
+            padding: 15px;
+            border-radius: 4px;
+            border-left: 4px solid #007bff;
+            margin: 15px 0;
+        }
+        .page-break {
+            page-break-before: always;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Linux Commands Guide</h1>
+        <p style="text-align: center; color: #666; margin-bottom: 40px;">
+            Master the 10 Essential Linux Commands
+        </p>
+
+        <h2>1. ls - List Directory Contents</h2>
+        <div class="description">
+            The <span class="command">ls</span> command displays files and directories in the current or specified directory.
+        </div>
+        
+        <div class="syntax">
+            <strong>Syntax:</strong> ls [options] [directory]
+        </div>
+        
+        <div class="example">
+            <strong>Examples:</strong><br>
+            ls                    # List files in current directory<br>
+            ls -l                 # List with detailed information<br>
+            ls -a                 # List all files including hidden ones<br>
+            ls -la /home/user     # List all files with details in /home/user<br>
+            ls -lh                # List with human-readable file sizes
+        </div>
+        
+        <div class="tips">
+            <strong>💡 Tip:</strong> Use <code>ls -la</code> to see all files with permissions, ownership, and timestamps.
+        </div>
+
+        <h2>2. cd - Change Directory</h2>
+        <div class="description">
+            The <span class="command">cd</span> command changes your current working directory to navigate through the file system.
+        </div>
+        
+        <div class="syntax">
+            <strong>Syntax:</strong> cd [directory]
+        </div>
+        
+        <div class="example">
+            <strong>Examples:</strong><br>
+            cd /home/user         # Go to specific directory<br>
+            cd ..                 # Go to parent directory<br>
+            cd ~                  # Go to home directory<br>
+            cd -                  # Go to previous directory<br>
+            cd                    # Go to home directory (same as cd ~)
+        </div>
+        
+        <div class="tips">
+            <strong>💡 Tip:</strong> Use <code>cd -</code> to quickly switch between two directories.
+        </div>
+
+        <h2>3. pwd - Print Working Directory</h2>
+        <div class="description">
+            The <span class="command">pwd</span> command shows the full path of your current working directory.
+        </div>
+        
+        <div class="syntax">
+            <strong>Syntax:</strong> pwd
+        </div>
+        
+        <div class="example">
+            <strong>Examples:</strong><br>
+            pwd                   # Show current directory path<br>
+            Output: /home/user/documents
+        </div>
+        
+        <div class="tips">
+            <strong>💡 Tip:</strong> Use <code>pwd</code> when you're lost in the file system to see where you are.
+        </div>
+
+        <div class="page-break"></div>
+
+        <h2>4. cat - Display File Contents</h2>
+        <div class="description">
+            The <span class="command">cat</span> command displays the contents of text files on the terminal.
+        </div>
+        
+        <div class="syntax">
+            <strong>Syntax:</strong> cat [options] filename
+        </div>
+        
+        <div class="example">
+            <strong>Examples:</strong><br>
+            cat file.txt          # Display file contents<br>
+            cat -n file.txt       # Display with line numbers<br>
+            cat file1.txt file2.txt # Display multiple files<br>
+            cat > newfile.txt     # Create new file (type content, Ctrl+D to save)
+        </div>
+        
+        <div class="tips">
+            <strong>💡 Tip:</strong> Use <code>cat -n</code> to see line numbers, helpful for programming files.
+        </div>
+
+        <h2>5. cp - Copy Files and Directories</h2>
+        <div class="description">
+            The <span class="command">cp</span> command copies files or directories from one location to another.
+        </div>
+        
+        <div class="syntax">
+            <strong>Syntax:</strong> cp [options] source destination
+        </div>
+        
+        <div class="example">
+            <strong>Examples:</strong><br>
+            cp file.txt backup.txt        # Copy file<br>
+            cp -r folder1 folder2         # Copy directory recursively<br>
+            cp *.txt /home/user/documents # Copy all .txt files<br>
+            cp -i file.txt existing.txt   # Copy with confirmation prompt
+        </div>
+        
+        <div class="tips">
+            <strong>💡 Tip:</strong> Use <code>cp -r</code> for directories and <code>cp -i</code> to avoid accidentally overwriting files.
+        </div>
+
+        <h2>6. mv - Move/Rename Files and Directories</h2>
+        <div class="description">
+            The <span class="command">mv</span> command moves files/directories or renames them.
+        </div>
+        
+        <div class="syntax">
+            <strong>Syntax:</strong> mv [options] source destination
+        </div>
+        
+        <div class="example">
+            <strong>Examples:</strong><br>
+            mv oldname.txt newname.txt    # Rename file<br>
+            mv file.txt /home/user/       # Move file to directory<br>
+            mv folder1 folder2            # Rename directory<br>
+            mv *.txt documents/           # Move all .txt files
+        </div>
+        
+        <div class="tips">
+            <strong>💡 Tip:</strong> Unlike <code>cp</code>, <code>mv</code> removes the original file/directory after moving.
+        </div>
+
+        <h2>7. chmod - Change File Permissions</h2>
+        <div class="description">
+            The <span class="command">chmod</span> command changes file and directory permissions.
+        </div>
+        
+        <div class="syntax">
+            <strong>Syntax:</strong> chmod [permissions] filename
+        </div>
+        
+        <div class="example">
+            <strong>Examples:</strong><br>
+            chmod 755 script.sh           # rwxr-xr-x permissions<br>
+            chmod +x file.txt             # Add execute permission<br>
+            chmod -w file.txt             # Remove write permission<br>
+            chmod u+r,g+w,o-x file.txt    # Complex permission changes
+        </div>
+        
+        <div class="tips">
+            <strong>💡 Tip:</strong> Common permissions: 644 (rw-r--r--) for files, 755 (rwxr-xr-x) for directories.
+        </div>
+
+        <div class="page-break"></div>
+
+        <h2>8. chown - Change File Ownership</h2>
+        <div class="description">
+            The <span class="command">chown</span> command changes file and directory ownership.
+        </div>
+        
+        <div class="syntax">
+            <strong>Syntax:</strong> chown [user:group] filename
+        </div>
+        
+        <div class="example">
+            <strong>Examples:</strong><br>
+            chown user file.txt           # Change owner to 'user'<br>
+            chown user:group file.txt     # Change owner and group<br>
+            chown -R user:group folder/   # Change ownership recursively<br>
+            chown :group file.txt         # Change group only
+        </div>
+        
+        <div class="tips">
+            <strong>💡 Tip:</strong> Use <code>sudo chown</code> when you need administrative privileges to change ownership.
+        </div>
+
+        <h2>9. grep - Search Text Patterns</h2>
+        <div class="description">
+            The <span class="command">grep</span> command searches for text patterns within files.
+        </div>
+        
+        <div class="syntax">
+            <strong>Syntax:</strong> grep [options] pattern [file]
+        </div>
+        
+        <div class="example">
+            <strong>Examples:</strong><br>
+            grep "error" logfile.txt      # Search for "error" in file<br>
+            grep -r "function" .          # Search recursively in current directory<br>
+            grep -i "warning" *.log       # Case-insensitive search<br>
+            grep -n "TODO" code.py        # Show line numbers with matches<br>
+            grep -v "debug" log.txt       # Show lines that don't match
+        </div>
+        
+        <div class="tips">
+            <strong>💡 Tip:</strong> Use <code>grep -r</code> to search in all files within directories.
+        </div>
+
+        <h2>10. find - Search for Files and Directories</h2>
+        <div class="description">
+            The <span class="command">find</span> command searches for files and directories based on various criteria.
+        </div>
+        
+        <div class="syntax">
+            <strong>Syntax:</strong> find [path] [expression]
+        </div>
+        
+        <div class="example">
+            <strong>Examples:</strong><br>
+            find . -name "*.txt"          # Find all .txt files<br>
+            find /home -type d -name "project*" # Find directories starting with "project"<br>
+            find . -size +100M            # Find files larger than 100MB<br>
+            find . -mtime -7              # Find files modified in last 7 days<br>
+            find . -name "*.log" -exec rm {} \; # Find and delete .log files
+        </div>
+        
+        <div class="tips">
+            <strong>💡 Tip:</strong> Use <code>find</code> with <code>-type f</code> for files only, <code>-type d</code> for directories only.
+        </div>
+
+        <div class="page-break"></div>
+
+        <h2>Quick Reference Summary</h2>
+        <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-top: 30px;">
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr style="background-color: #e9ecef;">
+                    <th style="padding: 10px; text-align: left; border: 1px solid #dee2e6;">Command</th>
+                    <th style="padding: 10px; text-align: left; border: 1px solid #dee2e6;">Purpose</th>
+                    <th style="padding: 10px; text-align: left; border: 1px solid #dee2e6;">Common Usage</th>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #dee2e6;"><code>ls</code></td>
+                    <td style="padding: 8px; border: 1px solid #dee2e6;">List files</td>
+                    <td style="padding: 8px; border: 1px solid #dee2e6;"><code>ls -la</code></td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #dee2e6;"><code>cd</code></td>
+                    <td style="padding: 8px; border: 1px solid #dee2e6;">Change directory</td>
+                    <td style="padding: 8px; border: 1px solid #dee2e6;"><code>cd /home/user</code></td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #dee2e6;"><code>pwd</code></td>
+                    <td style="padding: 8px; border: 1px solid #dee2e6;">Show current path</td>
+                    <td style="padding: 8px; border: 1px solid #dee2e6;"><code>pwd</code></td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #dee2e6;"><code>cat</code></td>
+                    <td style="padding: 8px; border: 1px solid #dee2e6;">Display file contents</td>
+                    <td style="padding: 8px; border: 1px solid #dee2e6;"><code>cat file.txt</code></td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #dee2e6;"><code>cp</code></td>
+                    <td style="padding: 8px; border: 1px solid #dee2e6;">Copy files</td>
+                    <td style="padding: 8px; border: 1px solid #dee2e6;"><code>cp -r folder1 folder2</code></td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #dee2e6;"><code>mv</code></td>
+                    <td style="padding: 8px; border: 1px solid #dee2e6;">Move/rename files</td>
+                    <td style="padding: 8px; border: 1px solid #dee2e6;"><code>mv old.txt new.txt</code></td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #dee2e6;"><code>chmod</code></td>
+                    <td style="padding: 8px; border: 1px solid #dee2e6;">Change permissions</td>
+                    <td style="padding: 8px; border: 1px solid #dee2e6;"><code>chmod 755 script.sh</code></td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #dee2e6;"><code>chown</code></td>
+                    <td style="padding: 8px; border: 1px solid #dee2e6;">Change ownership</td>
+                    <td style="padding: 8px; border: 1px solid #dee2e6;"><code>chown user:group file</code></td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #dee2e6;"><code>grep</code></td>
+                    <td style="padding: 8px; border: 1px solid #dee2e6;">Search text patterns</td>
+                    <td style="padding: 8px; border: 1px solid #dee2e6;"><code>grep -r "pattern" .</code></td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #dee2e6;"><code>find</code></td>
+                    <td style="padding: 8px; border: 1px solid #dee2e6;">Search files/directories</td>
+                    <td style="padding: 8px; border: 1px solid #dee2e6;"><code>find . -name "*.txt"</code></td>
+                </tr>
+            </table>
+        </div>
+
+        <div style="margin-top: 40px; text-align: center; color: #666;">
+            <p><strong>Study Tips:</strong></p>
+            <ul style="text-align: left; max-width: 600px; margin: 0 auto;">
+                <li>Practice each command with different options</li>
+                <li>Try combining commands using pipes (|)</li>
+                <li>Use <code>man command</code> to see the manual for any command</li>
+                <li>Start with simple examples and gradually try more complex ones</li>
+                <li>Focus on understanding what each command does rather than memorizing syntax</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
