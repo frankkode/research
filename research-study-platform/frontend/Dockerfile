@@ -6,19 +6,11 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
+# Install dependencies (including devDependencies needed for build)
 RUN npm install
 
-# Copy public directory first
-COPY public/ ./public/
-
-# Copy src directory
-COPY src/ ./src/
-
-# Copy other necessary files
-COPY tsconfig.json ./
-COPY tailwind.config.js ./
-COPY postcss.config.js ./
+# Copy all source files
+COPY . .
 
 # Build the app
 RUN npm run build
