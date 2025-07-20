@@ -15,7 +15,7 @@ import {
   CostLimits
 } from '../types';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8001/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://research-production-46af.up.railway.app';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
