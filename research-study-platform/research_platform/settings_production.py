@@ -19,9 +19,7 @@ DEBUG = False
 
 # Production hosts
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[
-    'your-domain.com',
-    'www.your-domain.com',
-    'api.your-domain.com'
+    'localhost','127.0.0.1,0.0.0.0','gtpresearch.up.railway.app','https://gtpresearch.up.railway.app'
 ])
 
 DJANGO_APPS = [
