@@ -175,8 +175,12 @@ def google_auth(request):
         study_group = request.data.get('study_group', random.choice(['PDF', 'ChatGPT']))  # Random assignment
         
         if not token:
+            error_msg = 'Google token is required'
+            print(f"❌ {error_msg}")
             return Response({
-                'error': 'Google token is required'
+                'error': error_msg,
+                'received_data': dict(request.data),
+                'data_keys': list(request.data.keys()) if request.data else []
             }, status=status.HTTP_400_BAD_REQUEST)
         
         # Verify the Google token

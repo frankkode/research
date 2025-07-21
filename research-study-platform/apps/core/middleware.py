@@ -45,22 +45,33 @@ class ForceProductionCORSMiddleware:
             response = self.get_response(request)
         
         # Add CORS headers to all responses
-        if origin in allowed_origins:
-            response['Access-Control-Allow-Origin'] = origin
-        elif origin.endswith('.up.railway.app'):
-            response['Access-Control-Allow-Origin'] = origin
-        elif 'localhost' in origin or '127.0.0.1' in origin:
-            response['Access-Control-Allow-Origin'] = origin
-        else:
-            # For debugging - log unknown origins
-            print(f"🚫 Unknown origin: {origin}")
-            
-        response['Access-Control-Allow-Credentials'] = 'true'
-        response['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
-        response['Access-Control-Allow-Headers'] = (
-            'Content-Type, Authorization, X-Requested-With, '
-            'X-CSRFToken, Accept, Accept-Version, Content-Length, '
-            'Content-MD5, Date, X-Api-Version'
-        )
+        try:
+            if origin in allowed_origins:
+                response['Access-Control-Allow-Origin'] = origin
+                print(f"✅ Allowed origin (explicit): {origin}")
+            elif origin.endswith('.up.railway.app'):
+                response['Access-Control-Allow-Origin'] = origin
+                print(f"✅ Allowed origin (Railway): {origin}")
+            elif 'localhost' in origin or '127.0.0.1' in origin:
+                response['Access-Control-Allow-Origin'] = origin
+                print(f"✅ Allowed origin (localhost): {origin}")
+            else:
+                # For debugging - log unknown origins but still allow for now
+                print(f"🚫 Unknown origin (allowing anyway): {origin}")
+                response['Access-Control-Allow-Origin'] = origin
+                
+            response['Access-Control-Allow-Credentials'] = 'true'
+            response['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+            response['Access-Control-Allow-Headers'] = (
+                'Content-Type, Authorization, X-Requested-With, '
+                'X-CSRFToken, Accept, Accept-Version, Content-Length, '
+                'Content-MD5, Date, X-Api-Version'
+            )
+        except Exception as cors_error:
+            print(f"❌ CORS middleware error: {cors_error}")
+            # Fallback - allow all origins to prevent blocking
+            response['Access-Control-Allow-Origin'] = '*'
+            response['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+            response['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
         
         return response
