@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Authentication Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; }
+        .form-container { border: 1px solid #ccc; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        input { width: 100%; padding: 10px; margin: 5px 0 15px 0; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+        button { background-color: #007bff; color: white; padding: 12px 20px; border: none; border-radius: 4px; cursor: pointer; margin: 5px; }
+        button:hover { background-color: #0056b3; }
+        .test-btn { background-color: #28a745; }
+        .test-btn:hover { background-color: #1e7e34; }
+        .message { padding: 15px; margin: 15px 0; border-radius: 4px; }
+        .success { background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .error { background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .toggle { background: none; color: #007bff; border: none; text-decoration: underline; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>🚀 Simple Authentication System</h1>
+    <p><strong>Direct HTML Test</strong> - This bypasses React completely!</p>
+    
+    <button class="test-btn" onclick="testServer()">🔧 Test Django Server</button>
+    
+    <div class="form-container">
+        <h2 id="form-title">🔐 Login</h2>
+        
+        <form id="auth-form" onsubmit="handleAuth(event)">
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" required placeholder="Enter your username">
+            
+            <div id="email-field" style="display: none;">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" placeholder="Enter your email">
+            </div>
+            
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required placeholder="Enter your password">
+            
+            <button type="submit" id="submit-btn">🚀 Login</button>
+        </form>
+        
+        <p style="text-align: center;">
+            <span id="toggle-text">Don't have an account?</span>
+            <button class="toggle" onclick="toggleMode()">📝 Register here</button>
+        </p>
+    </div>
+    
+    <div id="message-container"></div>
+    
+    <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-top: 30px;">
+        <h3>📋 Instructions:</h3>
+        <ol>
+            <li><strong>Start Django server:</strong> <code>python manage.py runserver</code></li>
+            <li><strong>Click "Test Django Server"</strong> to verify backend is running</li>
+            <li><strong>Register a new account</strong> or login with existing credentials</li>
+            <li><strong>Success!</strong> This works without React/CORS issues</li>
+        </ol>
+        
+        <h3>🔗 Endpoints:</h3>
+        <ul>
+            <li><code>GET /simple/test/</code> - Test server connection</li>
+            <li><code>POST /simple/register/</code> - Register new user</li>
+            <li><code>POST /simple/login/</code> - Login existing user</li>
+        </ul>
+        
+        <h3>🌐 Access:</h3>
+        <p><strong>Direct URL:</strong> <a href="http://localhost:3000/test-auth.html">http://localhost:3000/test-auth.html</a></p>
+    </div>
+
+    <script>
+        let isLoginMode = true;
+        
+        function showMessage(text, isSuccess = false) {
+            const container = document.getElementById('message-container');
+            container.innerHTML = `<div class="message ${isSuccess ? 'success' : 'error'}">${text}</div>`;
+        }
+        
+        function toggleMode() {
+            isLoginMode = !isLoginMode;
+            const emailField = document.getElementById('email-field');
+            const submitBtn = document.getElementById('submit-btn');
+            const formTitle = document.getElementById('form-title');
+            const toggleText = document.getElementById('toggle-text');
+            const toggleBtn = document.querySelector('.toggle');
+            
+            if (isLoginMode) {
+                emailField.style.display = 'none';
+                submitBtn.textContent = '🚀 Login';
+                formTitle.textContent = '🔐 Login';
+                toggleText.textContent = "Don't have an account?";
+                toggleBtn.textContent = '📝 Register here';
+                document.getElementById('email').required = false;
+            } else {
+                emailField.style.display = 'block';
+                submitBtn.textContent = '✅ Register';
+                formTitle.textContent = '📝 Register';
+                toggleText.textContent = 'Already have an account?';
+                toggleBtn.textContent = '🔐 Login here';
+                document.getElementById('email').required = true;
+            }
+        }
+        
+        async function testServer() {
+            showMessage('⏳ Testing server connection...', false);
+            
+            try {
+                const response = await fetch('http://localhost:8000/simple/test/');
+                const data = await response.json();
+                showMessage(`✅ Server test successful: ${data.message} (${data.timestamp})`, true);
+            } catch (error) {
+                showMessage(`❌ Server connection failed: ${error.message}. Make sure Django is running on port 8000!`, false);
+            }
+        }
+        
+        async function handleAuth(event) {
+            event.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const email = document.getElementById('email').value;
+            
+            const endpoint = isLoginMode ? '/simple/login/' : '/simple/register/';
+            const requestBody = isLoginMode 
+                ? { username, password }
+                : { username, email, password };
+            
+            showMessage('⏳ Processing...', false);
+            
+            try {
+                const response = await fetch(`http://localhost:8000${endpoint}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showMessage(`✅ ${data.message}<br><strong>User Details:</strong><br>• Username: ${data.user.username}<br>• Email: ${data.user.email}<br>• Participant ID: ${data.user.participant_id}<br>• User ID: ${data.user.id}`, true);
+                    
+                    // Clear form
+                    document.getElementById('auth-form').reset();
+                } else {
+                    showMessage(`❌ ${isLoginMode ? 'Login' : 'Registration'} failed: ${data.error}`, false);
+                }
+            } catch (error) {
+                showMessage(`❌ Network error: ${error.message}. Check if Django server is running!`, false);
+            }
+        }
+        
+        // Show initial instruction
+        showMessage('👆 Click "Test Django Server" first to verify your backend is running!', false);
+    </script>
+</body>
+</html>
