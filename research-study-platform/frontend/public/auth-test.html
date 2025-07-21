@@ -2,6 +2,7 @@
 <html>
 <head>
     <title>Auth Test</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
         body { font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; }
         .form { border: 1px solid #ccc; padding: 20px; margin: 20px 0; border-radius: 8px; }
@@ -37,9 +38,49 @@
         </form>
     </div>
     
+    <div class="form">
+        <h3>Google Authentication</h3>
+        <div id="g_id_onload" 
+             data-client_id="875588092118-0d4ok5qjudm1uh0nd68mf5s54ofvdf4r.apps.googleusercontent.com"
+             data-context="signin"
+             data-ux_mode="popup"
+             data-callback="handleGoogleAuth"
+             data-auto_prompt="false">
+        </div>
+        
+        <div class="g_id_signin" 
+             data-type="standard"
+             data-shape="rectangular"
+             data-theme="outline"
+             data-text="signin_with"
+             data-size="large"
+             data-logo_alignment="left">
+        </div>
+        
+        <button onclick="manualGoogleSignIn()" style="background: #db4437;">Sign in with Google (Manual)</button>
+    </div>
+    
     <div id="messages"></div>
     
     <script>
+        // Environment-aware API URL configuration
+        const getApiBaseUrl = () => {
+            const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            const baseUrl = isLocalhost 
+                ? 'http://localhost:8000'
+                : 'https://research-production-46af.up.railway.app';
+            
+            console.log('🌐 Auth Test API Configuration:', {
+                baseUrl,
+                isLocalhost,
+                hostname: window.location.hostname
+            });
+            
+            return baseUrl;
+        };
+        
+        const API_BASE = getApiBaseUrl();
+        
         function showMessage(msg, isSuccess = false) {
             const div = document.getElementById('messages');
             div.innerHTML = `<div class="message ${isSuccess ? 'success' : 'error'}">${msg}</div>`;
@@ -47,9 +88,9 @@
         
         async function testServer() {
             try {
-                const response = await fetch('http://localhost:8000/simple/test/');
+                const response = await fetch(`${API_BASE}/api/auth/profile/`);
                 const data = await response.json();
-                showMessage(`✅ Server working: ${data.message}`, true);
+                showMessage(`✅ Server working: Connected to ${API_BASE}`, true);
             } catch (error) {
                 showMessage(`❌ Server error: ${error.message}`, false);
             }
@@ -62,18 +103,19 @@
             const password = document.getElementById('regPassword').value;
             
             try {
-                const response = await fetch('http://localhost:8000/simple/register/', {
+                const response = await fetch(`${API_BASE}/api/auth/register/`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, email, password })
                 });
                 const data = await response.json();
                 
-                if (data.success) {
-                    showMessage(`✅ Registered! User ID: ${data.user.id}, Participant: ${data.user.participant_id}`, true);
+                if (response.ok && data.user) {
+                    showMessage(`✅ Registered! User: ${data.user.username}, Participant: ${data.user.participant_id}`, true);
                     document.getElementById('registerForm').reset();
                 } else {
-                    showMessage(`❌ Registration failed: ${data.error}`, false);
+                    const errorMsg = data.error || data.detail || 'Registration failed';
+                    showMessage(`❌ Registration failed: ${errorMsg}`, false);
                 }
             } catch (error) {
                 showMessage(`❌ Registration error: ${error.message}`, false);
@@ -86,22 +128,58 @@
             const password = document.getElementById('loginPassword').value;
             
             try {
-                const response = await fetch('http://localhost:8000/simple/login/', {
+                const response = await fetch(`${API_BASE}/api/auth/login/`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, password })
                 });
                 const data = await response.json();
                 
-                if (data.success) {
+                if (response.ok && data.user) {
                     showMessage(`✅ Login success! Welcome ${data.user.username} (${data.user.participant_id})`, true);
                 } else {
-                    showMessage(`❌ Login failed: ${data.error}`, false);
+                    const errorMsg = data.error || data.detail || 'Login failed';
+                    showMessage(`❌ Login failed: ${errorMsg}`, false);
                 }
             } catch (error) {
                 showMessage(`❌ Login error: ${error.message}`, false);
             }
         });
+
+        // Google Authentication Functions
+        function handleGoogleAuth(response) {
+            console.log('Google Auth Response:', response);
+            sendGoogleTokenToBackend(response.credential);
+        }
+
+        function manualGoogleSignIn() {
+            google.accounts.id.prompt((notification) => {
+                if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+                    console.log('Google Sign-In prompt not displayed or skipped');
+                    showMessage('❌ Google Sign-In not available. Please try the automatic button above.', false);
+                }
+            });
+        }
+
+        async function sendGoogleTokenToBackend(token) {
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/google-auth/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token: token })
+                });
+                const data = await response.json();
+                
+                if (response.ok && data.user) {
+                    showMessage(`✅ Google Auth Success! Welcome ${data.user.username} (${data.user.participant_id})`, true);
+                } else {
+                    const errorMsg = data.error || data.detail || 'Google authentication failed';
+                    showMessage(`❌ Google Auth Failed: ${errorMsg}`, false);
+                }
+            } catch (error) {
+                showMessage(`❌ Google Auth Error: ${error.message}`, false);
+            }
+        }
     </script>
 </body>
 </html>

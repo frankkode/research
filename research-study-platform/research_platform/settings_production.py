@@ -182,8 +182,7 @@ REST_FRAMEWORK = {
 
 # CORS Configuration for production
 CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS', default=[
-    "https://your-domain.com",
-    "https://www.your-domain.com",
+    "http://localhost:3000","http://localhost:3001","http://127.0.0.1:3000","http://127.0.0.1:3001","https://gtpresearch.up.railway.app","https://research-production-46af.up.railway.app"
 ])
 
 CORS_ALLOW_CREDENTIALS = True

@@ -51,7 +51,7 @@ const GoogleSignIn: React.FC<GoogleSignInProps> = ({ onSuccess, onError, text = 
           theme: 'outline',
           size: 'large',
           text: 'continue_with',
-          width: '100%',
+          width: '300',
         });
       }
     } catch (error) {

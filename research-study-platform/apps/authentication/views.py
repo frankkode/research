@@ -12,12 +12,18 @@ from .models import UserProfile
 from apps.core.models import User
 import secrets
 import string
+import random
 
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def register(request):
-    serializer = UserRegistrationSerializer(data=request.data)
+    # Make a copy of request data to modify it
+    data = request.data.copy()
+    # Override study_group with random assignment
+    data['study_group'] = random.choice(['PDF', 'ChatGPT'])
+    
+    serializer = UserRegistrationSerializer(data=data)
     if serializer.is_valid():
         user = serializer.save()
         UserProfile.objects.create(user=user)
@@ -135,7 +141,7 @@ def google_auth(request):
     """Authenticate user with Google OAuth token"""
     try:
         token = request.data.get('token')
-        study_group = request.data.get('study_group', 'PDF')  # Default to PDF
+        study_group = request.data.get('study_group', random.choice(['PDF', 'ChatGPT']))  # Random assignment
         
         if not token:
             return Response({

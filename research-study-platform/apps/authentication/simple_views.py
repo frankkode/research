@@ -11,6 +11,7 @@ from django.views.decorators.http import require_http_methods
 import json
 import secrets
 import string
+import random
 
 
 @csrf_exempt
@@ -49,9 +50,9 @@ def simple_register(request):
                 'error': 'Email already exists'
             })
         
-        # Generate participant ID and assign default study group
+        # Generate participant ID and randomly assign study group
         participant_id = f"USER_{secrets.token_hex(4).upper()}"
-        study_group = 'PDF'  # Default to PDF group
+        study_group = random.choice(['PDF', 'ChatGPT'])  # Random assignment
         
         # Create user with required fields
         user = User.objects.create_user(
@@ -148,3 +149,150 @@ def simple_test(request):
         'message': 'Server is working!',
         'timestamp': '2025-07-21'
     })
+
+
+@csrf_exempt
+@require_http_methods(["POST", "OPTIONS"])
+def simple_google_auth(request):
+    """Google OAuth authentication endpoint"""
+    if request.method == 'OPTIONS':
+        response = JsonResponse({})
+        response['Access-Control-Allow-Origin'] = '*'
+        response['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
+        response['Access-Control-Allow-Headers'] = 'Content-Type'
+        return response
+    
+    try:
+        import jwt
+        from django.conf import settings
+        import requests
+        
+        data = json.loads(request.body)
+        token = data.get('token')
+        
+        if not token:
+            return JsonResponse({
+                'success': False,
+                'error': 'Google token required'
+            })
+        
+        # Verify Google token
+        try:
+            # Get Google's public keys
+            google_keys_url = 'https://www.googleapis.com/oauth2/v3/certs'
+            google_keys = requests.get(google_keys_url).json()
+            
+            # Decode token header to get key id
+            header = jwt.get_unverified_header(token)
+            key_id = header['kid']
+            
+            # Find the correct key
+            public_key = None
+            for key_data in google_keys['keys']:
+                if key_data['kid'] == key_id:
+                    public_key = jwt.algorithms.RSAAlgorithm.from_jwk(key_data)
+                    break
+            
+            if not public_key:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Invalid Google token key'
+                })
+            
+            # Verify and decode the token
+            google_client_id = '875588092118-0d4ok5qjudm1uh0nd68mf5s54ofvdf4r.apps.googleusercontent.com'
+            payload = jwt.decode(
+                token, 
+                public_key, 
+                algorithms=['RS256'],
+                audience=google_client_id
+            )
+            
+        except jwt.InvalidTokenError as e:
+            return JsonResponse({
+                'success': False,
+                'error': f'Invalid Google token: {str(e)}'
+            })
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'error': f'Token verification failed: {str(e)}'
+            })
+        
+        # Extract user information from Google token
+        email = payload.get('email')
+        name = payload.get('name', '')
+        google_id = payload.get('sub')
+        
+        if not email or not google_id:
+            return JsonResponse({
+                'success': False,
+                'error': 'Invalid Google token payload'
+            })
+        
+        # Check if user already exists
+        try:
+            user = User.objects.get(email=email)
+            # User exists, log them in
+            django_login(request, user)
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Google login successful',
+                'user': {
+                    'id': str(user.id),
+                    'username': user.username,
+                    'email': user.email,
+                    'participant_id': user.participant_id,
+                    'study_group': user.study_group
+                }
+            })
+            
+        except User.DoesNotExist:
+            # Create new user
+            username = email.split('@')[0]  # Use email prefix as username
+            counter = 1
+            original_username = username
+            
+            # Ensure unique username
+            while User.objects.filter(username=username).exists():
+                username = f"{original_username}_{counter}"
+                counter += 1
+            
+            # Generate participant ID and randomly assign study group
+            participant_id = f"GUSER_{secrets.token_hex(4).upper()}"
+            study_group = random.choice(['PDF', 'ChatGPT'])  # Random assignment
+            
+            # Create user
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                first_name=name.split(' ')[0] if name else '',
+                last_name=' '.join(name.split(' ')[1:]) if len(name.split(' ')) > 1 else '',
+                participant_id=participant_id,
+                study_group=study_group
+            )
+            
+            # Set an unusable password since this is OAuth
+            user.set_unusable_password()
+            user.save()
+            
+            django_login(request, user)
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Google registration and login successful',
+                'user': {
+                    'id': str(user.id),
+                    'username': user.username,
+                    'email': user.email,
+                    'participant_id': participant_id,
+                    'study_group': study_group
+                }
+            })
+            
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': f'Google authentication failed: {str(e)}'
+        })

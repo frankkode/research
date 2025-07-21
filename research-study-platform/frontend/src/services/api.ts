@@ -15,12 +15,42 @@ import {
   CostLimits
 } from '../types';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://research-production-46af.up.railway.app/api';
+// Environment-based API URL configuration
+const getApiBaseUrl = () => {
+  const envUrl = process.env.REACT_APP_API_URL;
+  const environment = process.env.REACT_APP_ENVIRONMENT || process.env.NODE_ENV;
+  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  
+  // Priority: 1) Explicit env var, 2) Auto-detect based on hostname, 3) Default to production
+  let apiUrl = envUrl;
+  
+  if (!apiUrl) {
+    apiUrl = isLocalhost 
+      ? 'http://localhost:8000/api'
+      : 'https://research-production-46af.up.railway.app/api';
+  }
+  
+  // Force local URL for development debugging
+  if (isLocalhost) {
+    apiUrl = 'http://localhost:8000/api';
+    console.log('🔧 FORCED LOCAL API URL FOR DEBUGGING');
+  }
+  
+  // Log configuration for debugging
+  console.log('🌐 API Configuration:', {
+    apiUrl,
+    environment,
+    isLocalhost,
+    envUrl,
+    hostname: window.location.hostname,
+    nodeEnv: process.env.NODE_ENV,
+    allReactEnvVars: Object.keys(process.env).filter(key => key.startsWith('REACT_APP_'))
+  });
+  
+  return apiUrl;
+};
 
-// Debug log to see what URL is being used
-console.log('API_BASE_URL:', API_BASE_URL);
-console.log('REACT_APP_API_URL env:', process.env.REACT_APP_API_URL);
-console.log('Cache buster:', Date.now());
+const API_BASE_URL = getApiBaseUrl();
 
 const api = axios.create({
   baseURL: API_BASE_URL,
