@@ -18,14 +18,6 @@ import random
 @api_view(['POST', 'OPTIONS'])
 @permission_classes([AllowAny])
 def register(request):
-    if request.method == 'OPTIONS':
-        from django.http import HttpResponse
-        response = HttpResponse()
-        response['Access-Control-Allow-Origin'] = request.META.get('HTTP_ORIGIN', '*')
-        response['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
-        response['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
-        response['Access-Control-Allow-Credentials'] = 'true'
-        return response
     # Make a copy of request data to modify it
     data = request.data.copy()
     # Override study_group with random assignment
@@ -46,14 +38,6 @@ def register(request):
 @api_view(['POST', 'OPTIONS'])
 @permission_classes([AllowAny])
 def login(request):
-    if request.method == 'OPTIONS':
-        from django.http import HttpResponse
-        response = HttpResponse()
-        response['Access-Control-Allow-Origin'] = request.META.get('HTTP_ORIGIN', '*')
-        response['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
-        response['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
-        response['Access-Control-Allow-Credentials'] = 'true'
-        return response
     serializer = UserLoginSerializer(data=request.data)
     if serializer.is_valid():
         user = serializer.validated_data
@@ -159,16 +143,6 @@ def google_auth(request):
     print(f"🔍 Request method: {request.method}")
     print(f"🔍 Request data keys: {list(request.data.keys()) if hasattr(request, 'data') else 'No data'}")
     
-    # Handle OPTIONS preflight request
-    if request.method == 'OPTIONS':
-        from django.http import HttpResponse
-        response = HttpResponse()
-        response['Access-Control-Allow-Origin'] = request.META.get('HTTP_ORIGIN', '*')
-        response['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
-        response['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
-        response['Access-Control-Allow-Credentials'] = 'true'
-        return response
-    
     try:
         token = request.data.get('token')
         study_group = request.data.get('study_group', random.choice(['PDF', 'ChatGPT']))  # Random assignment
@@ -254,3 +228,18 @@ def google_auth(request):
             'error': 'Google authentication failed',
             'detail': str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET', 'POST', 'OPTIONS'])
+@permission_classes([AllowAny])
+def cors_test(request):
+    """Test endpoint to verify CORS is working"""
+    print(f"🧪 CORS Test - Origin: {request.META.get('HTTP_ORIGIN', 'None')}, Method: {request.method}")
+    
+    return Response({
+        'message': 'CORS test successful',
+        'method': request.method,
+        'origin': request.META.get('HTTP_ORIGIN', 'None'),
+        'headers': dict(request.headers),
+        'timestamp': timezone.now().isoformat(),
+    }, status=status.HTTP_200_OK)

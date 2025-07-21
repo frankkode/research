@@ -9,4 +9,5 @@ urlpatterns = [
     path('consent/', views.submit_consent, name='submit_consent'),
     path('complete-interaction/', views.complete_interaction, name='complete_interaction'),
     path('google-auth/', views.google_auth, name='google_auth'),
+    path('cors-test/', views.cors_test, name='cors_test'),
 ]
