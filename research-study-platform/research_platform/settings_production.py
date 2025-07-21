@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 import environ
+from django.conf import settings
 
 env = environ.Env(
     DEBUG=(bool, False)
@@ -239,8 +240,10 @@ OPENAI_TEMPERATURE = env('OPENAI_TEMPERATURE', default=0.7, cast=float)
 OPENAI_RATE_LIMIT_REQUESTS = env('OPENAI_RATE_LIMIT_REQUESTS', default=60, cast=int)
 OPENAI_RATE_LIMIT_TOKENS = env('OPENAI_RATE_LIMIT_TOKENS', default=40000, cast=int)
 
+client_id = getattr(settings, 'GOOGLE_OAUTH2_CLIENT_ID', default="")
+
 # Google OAuth Configuration for production
-GOOGLE_OAUTH2_CLIENT_ID = env('GOOGLE_OAUTH2_CLIENT_ID', default='875588092118-0d4ok5qjudm1uh0nd68mf5s54ofvdf4r.apps.googleusercontent.com')
+GOOGLE_OAUTH2_CLIENT_ID = env('GOOGLE_OAUTH2_CLIENT_ID')
 
 # Redis and Celery for production
 REDIS_URL = env('REDIS_URL', default='redis://localhost:6379')
@@ -327,20 +330,24 @@ ENABLE_DATA_ANONYMIZATION = True
 # Monitoring and analytics
 ENABLE_SENTRY = env('ENABLE_SENTRY', default=False, cast=bool)
 if ENABLE_SENTRY:
-    import sentry_sdk
-    from sentry_sdk.integrations.django import DjangoIntegration
-    from sentry_sdk.integrations.celery import CeleryIntegration
-    
-    sentry_sdk.init(
-        dsn=env('SENTRY_DSN'),
-        integrations=[
-            DjangoIntegration(),
-            CeleryIntegration(),
-        ],
-        traces_sample_rate=0.1,
-        send_default_pii=False,
-        environment='production',
-    )
+    try:
+        import sentry_sdk
+        from sentry_sdk.integrations.django import DjangoIntegration
+        from sentry_sdk.integrations.celery import CeleryIntegration
+        
+        sentry_sdk.init(
+            dsn=env('SENTRY_DSN'),
+            integrations=[
+                DjangoIntegration(),
+                CeleryIntegration(),
+            ],
+            traces_sample_rate=0.1,
+            send_default_pii=False,
+            environment='production',
+        )
+    except ImportError:
+        print("⚠️ Sentry SDK not installed, monitoring disabled")
+        pass
 
 # WhiteNoise settings for static files
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'

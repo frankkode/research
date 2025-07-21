@@ -115,7 +115,7 @@ const Dashboard: React.FC = () => {
       navigate(`/study/${session.data.session_id}`);
     } catch (error) {
       console.error('Failed to start learning session:', error);
-      toast.error('Failed to start learning session');
+      toast.error('Failed to start learning session contact support');
     }
   };
 

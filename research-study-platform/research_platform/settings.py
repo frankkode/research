@@ -158,6 +158,8 @@ OPENAI_MAX_TOKENS = env('OPENAI_MAX_TOKENS', default=500, cast=int)
 OPENAI_TEMPERATURE = env('OPENAI_TEMPERATURE', default=0.7, cast=float)
 OPENAI_RATE_LIMIT_REQUESTS = env('OPENAI_RATE_LIMIT_REQUESTS', default=60, cast=int)  # per minute
 OPENAI_RATE_LIMIT_TOKENS = env('OPENAI_RATE_LIMIT_TOKENS', default=40000, cast=int)  # per minute
+from django.conf import settings
+client_id = getattr(settings, 'GOOGLE_OAUTH2_CLIENT_ID', None)
 
 # Google OAuth Configuration
 GOOGLE_OAUTH2_CLIENT_ID = env('GOOGLE_OAUTH2_CLIENT_ID', default='')
