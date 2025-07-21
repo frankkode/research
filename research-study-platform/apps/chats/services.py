@@ -98,14 +98,13 @@ class OpenAIService:
             self.client = None
         else:
             try:
-                # Initialize with minimal parameters for OpenAI v1.7.0 compatibility
-                # Remove any potentially unsupported parameters like proxies
-                self.client = openai.OpenAI(
-                    api_key=self.api_key,
-                    timeout=30.0,  # Set reasonable timeout
-                    max_retries=2   # Set retry limit
-                )
-                logger.info("OpenAI client initialized successfully")
+                # Set API key as environment variable to avoid parameter issues
+                import os
+                os.environ['OPENAI_API_KEY'] = self.api_key
+                
+                # Initialize with no parameters - let OpenAI use env var
+                self.client = openai.OpenAI()
+                logger.info("OpenAI client initialized successfully with environment variable")
             except Exception as e:
                 logger.error(f"Failed to initialize OpenAI client: {str(e)}")
                 self.client = None
@@ -412,12 +411,12 @@ class OpenAIService:
             }
     
     def _generate_fallback_response(self, messages: List[Dict], retry_count: int) -> Dict:
-        """Generate fallback response when OpenAI API is not available"""
+        """Generate intelligent fallback response when OpenAI API is not available"""
         if not messages:
-            content = "Hello! I'm your AI assistant. I can help you with any questions or topics you'd like to discuss. What can I help you with today?"
+            content = "Hello! I'm your AI assistant. I can help you with any questions about Linux commands and more. What would you like to know?"
         else:
             last_message = messages[-1]['content'].lower()
-            content = self._get_general_response(last_message)
+            content = self._get_intelligent_response(last_message)
         
         return {
             'content': content,
@@ -433,6 +432,440 @@ class OpenAIService:
             'estimated_cost': Decimal('0.001')
         }
     
+    def _get_intelligent_response(self, user_input: str) -> str:
+        """Generate intelligent response to user's question"""
+        
+        # Example requests (check first)
+        if any(word in user_input for word in ['example', 'examples', 'show me', 'give', 'demonstrate']):
+            import random
+            examples = [
+                """Here are some practical Linux command examples:
+
+**File Management:**
+- `ls -la ~/Documents` - List all files in Documents with details
+- `cp important.txt backup/` - Copy file to backup folder
+- `mv downloads/*.pdf ~/Documents/PDFs/` - Move all PDFs to Documents
+
+**Text Operations:**  
+- `grep -r "TODO" src/` - Find all TODO comments in source code
+- `find . -name "*.log" -size +1M` - Find log files larger than 1MB
+- `cat error.log | grep "ERROR" | tail -10` - Show last 10 error messages
+
+What specific command would you like examples for?""",
+
+                """Here are some useful Linux command combinations:
+
+**System Information:**
+- `ls -lh /var/log/` - Check log file sizes
+- `find /home -name "*.tmp" -delete` - Clean up temp files
+- `chmod +x script.sh && ./script.sh` - Make script executable and run it
+
+**File Search & Organization:**
+- `grep -n "function" *.py` - Find functions in Python files with line numbers
+- `cp -r project/ backup/project-$(date +%Y%m%d)` - Backup with timestamp
+- `find . -type f -name "*.txt" | head -5` - Show first 5 text files
+
+Which type of examples interest you most?""",
+
+                """Here are some beginner-friendly Linux examples:
+
+**Getting Started:**
+- `pwd` then `ls` - See where you are and what's there
+- `cd Desktop && ls` - Go to Desktop and see what's on it
+- `cat README.txt` - Read a text file
+
+**Safe Practice:**
+- `cp file.txt file.txt.backup` - Always backup before editing
+- `ls -la` before `rm` - Check what you're about to delete
+- `chmod +x script` then `ls -l script` - Verify permissions changed
+
+Want to learn about any specific command in detail?"""
+            ]
+            return random.choice(examples)
+
+        # Common question patterns (check before specific commands)
+        elif any(word in user_input for word in ['difference', 'compare', 'vs', 'versus']):
+            return """Great question about comparing commands! Here are key differences:
+
+**cp vs mv:**
+- `cp` copies (original stays), `mv` moves (original gone)
+- `cp file.txt backup.txt` - Now you have both files
+- `mv file.txt renamed.txt` - file.txt no longer exists
+
+**chmod vs chown:**  
+- `chmod` changes permissions (read/write/execute)
+- `chown` changes ownership (which user owns the file)
+
+**grep vs find:**
+- `grep` searches INSIDE files for text content
+- `find` searches FOR files by name, size, date, etc.
+
+**ls vs pwd:**
+- `ls` shows WHAT'S in your current directory
+- `pwd` shows WHERE your current directory is located
+
+What specific comparison were you curious about?"""
+
+        elif any(word in user_input for word in ['how do i', 'how to', 'how can i']):
+            return """Great question! I can help you with Linux commands. Here are some common "how to" scenarios:
+
+**File Operations:**
+- "How do I list files?" → Use `ls` or `ls -la` for detailed view
+- "How do I copy files?" → Use `cp source destination`  
+- "How do I move files?" → Use `mv source destination`
+
+**Navigation:**
+- "How do I change directories?" → Use `cd /path/to/directory`
+- "How do I see where I am?" → Use `pwd`
+
+**File Content:**
+- "How do I view file contents?" → Use `cat filename.txt`
+- "How do I search in files?" → Use `grep "pattern" filename`
+
+What specific task are you trying to accomplish?"""
+
+        elif any(word in user_input for word in ['what is', 'what does', 'explain']):
+            return """I can explain any of the Linux commands! Here's what each one does:
+
+**File Listing & Navigation:**
+- `ls` - Shows files and directories in current location
+- `cd` - Changes your current directory
+- `pwd` - Shows your current directory path
+
+**File Operations:**
+- `cat` - Displays file contents on screen  
+- `cp` - Copies files or directories
+- `mv` - Moves or renames files/directories
+
+**Permissions & Ownership:**
+- `chmod` - Changes file permissions (who can read/write/execute)
+- `chown` - Changes file ownership
+
+**Search Operations:**
+- `grep` - Searches for text patterns inside files
+- `find` - Searches for files and directories by name/properties
+
+Which command would you like me to explain in detail?"""
+
+        elif any(word in user_input for word in ['why', 'when', 'should i']):
+            return """Excellent question! Understanding when to use each command is key:
+
+**When to use ls:**
+- Before doing anything - see what files are there
+- After copying/moving - confirm it worked
+- When looking for a specific file
+
+**When to use cd:**
+- Navigate to where your files are
+- Go to project directories
+- Return home with `cd ~`
+
+**When to use chmod:**
+- Make scripts executable: `chmod +x script.sh`
+- Secure files: `chmod 600 private.txt` (only you can read/write)
+- Share files: `chmod 644 document.txt` (others can read)
+
+**When to use grep:**
+- Find errors in log files: `grep "error" logfile.txt`
+- Search code for functions: `grep "function" *.js`
+- Filter command output: `ls | grep ".pdf"`
+
+What situation are you trying to handle?"""
+
+        # Linux command specific responses
+        elif 'ls' in user_input:
+            return """The **ls** command lists files and directories. Here's how it works:
+
+**Basic Usage:**
+- `ls` - Lists files in the current directory
+- `ls -l` - Shows detailed information (permissions, size, date)
+- `ls -a` - Shows all files including hidden ones (starting with .)
+- `ls -la` - Combines both options for detailed view of all files
+
+**Examples:**
+- `ls Documents/` - Lists contents of Documents folder
+- `ls -lh` - Shows file sizes in human-readable format (KB, MB, GB)
+- `ls *.txt` - Lists only .txt files
+
+The ls command is one of the most frequently used Linux commands for file management."""
+
+        elif 'cd' in user_input:
+            return """The **cd** command changes your current directory. Here's how to use it:
+
+**Basic Usage:**
+- `cd /path/to/directory` - Go to specific directory
+- `cd ..` - Go up one directory level
+- `cd ~` - Go to your home directory
+- `cd -` - Go back to previous directory
+- `cd` (alone) - Also goes to home directory
+
+**Examples:**
+- `cd /usr/local/bin` - Navigate to that specific path
+- `cd ../Downloads` - Go up one level, then into Downloads
+- `cd ~/Documents` - Go to Documents in your home folder
+
+**Tip:** Use `pwd` after `cd` to see where you are now!"""
+
+        elif 'pwd' in user_input:
+            return """The **pwd** command shows your current directory location:
+
+**Usage:**
+- `pwd` - Prints the full path of where you are right now
+
+**Example Output:**
+If you're in your Documents folder, `pwd` might show:
+`/home/username/Documents`
+
+**Why it's useful:**
+- Helps you know exactly where you are in the file system
+- Useful when writing scripts that need to know the current location
+- Great for confirming you're in the right place before running commands
+
+PWD stands for "Print Working Directory"."""
+
+        elif any(cmd in user_input for cmd in ['cat', 'file content', 'read file']):
+            return """The **cat** command displays file contents:
+
+**Basic Usage:**
+- `cat filename.txt` - Shows the entire file content
+- `cat file1.txt file2.txt` - Shows multiple files in sequence
+- `cat -n filename.txt` - Shows content with line numbers
+
+**Examples:**
+- `cat /etc/hosts` - View system hosts file
+- `cat script.sh` - View a shell script
+- `cat log.txt | grep error` - Combine with grep to find errors
+
+**Related commands:**
+- `less filename.txt` - View large files page by page
+- `head filename.txt` - Show just the first few lines
+- `tail filename.txt` - Show just the last few lines"""
+
+        elif any(word in user_input for word in ['cp', 'copy']):
+            return """The **cp** command copies files and directories:
+
+**Basic Usage:**
+- `cp source destination` - Copy a file
+- `cp -r folder/ backup/` - Copy directory recursively
+- `cp -i file.txt backup.txt` - Copy with confirmation prompt
+
+**Examples:**
+- `cp document.txt backup.txt` - Copy file with new name
+- `cp *.jpg /backup/images/` - Copy all JPG files to backup
+- `cp -r project/ project-backup/` - Copy entire project folder
+
+**Useful options:**
+- `-r` or `-R` - Copy directories recursively
+- `-i` - Ask before overwriting files
+- `-v` - Verbose (show what's being copied)"""
+
+        elif any(word in user_input for word in ['mv', 'move', 'rename']):
+            return """The **mv** command moves/renames files and directories:
+
+**Basic Usage:**
+- `mv oldname newname` - Rename a file or folder
+- `mv file.txt /new/location/` - Move file to different directory
+- `mv *.txt documents/` - Move all .txt files to documents folder
+
+**Examples:**
+- `mv report.doc final_report.doc` - Rename file
+- `mv temp_files/ archive/` - Move entire directory
+- `mv file.txt backup/file_backup.txt` - Move AND rename
+
+**Important:** Unlike `cp`, `mv` actually moves the file (removes from original location). Be careful not to overwrite important files!"""
+
+        elif any(word in user_input for word in ['chmod', 'permission', 'access']):
+            return """The **chmod** command changes file permissions:
+
+**Basic Usage:**
+- `chmod 755 script.sh` - Make file executable by owner, readable by others
+- `chmod +x program` - Add execute permission
+- `chmod -w file.txt` - Remove write permission
+
+**Permission Numbers:**
+- 7 = read + write + execute (rwx)
+- 6 = read + write (rw-)
+- 5 = read + execute (r-x)
+- 4 = read only (r--)
+
+**Examples:**
+- `chmod 644 document.txt` - Owner can read/write, others can read
+- `chmod +x script.sh` - Make script executable
+- `chmod -R 755 website/` - Set permissions for entire directory"""
+
+        elif any(word in user_input for word in ['chown', 'owner', 'ownership']):
+            return """The **chown** command changes file ownership:
+
+**Basic Usage:**
+- `chown username file.txt` - Change owner of file
+- `chown username:groupname file.txt` - Change owner and group
+- `chown -R username folder/` - Change ownership recursively
+
+**Examples:**
+- `chown alice document.txt` - Make alice the owner
+- `chown bob:developers script.sh` - Set bob as owner, developers as group
+- `sudo chown root:root /system/file` - Change to root ownership (requires sudo)
+
+**Note:** You usually need sudo (administrator privileges) to change ownership of files you don't own."""
+
+        elif any(word in user_input for word in ['grep', 'search', 'find text']):
+            return """The **grep** command searches for text patterns in files:
+
+**Basic Usage:**
+- `grep "pattern" file.txt` - Search for pattern in file
+- `grep -r "pattern" directory/` - Search recursively in directory
+- `grep -i "pattern" file.txt` - Case-insensitive search
+
+**Examples:**
+- `grep "error" log.txt` - Find lines containing "error"
+- `grep -n "function" script.py` - Show line numbers with matches
+- `ls | grep ".txt"` - Filter ls output to show only .txt files
+
+**Useful options:**
+- `-i` - Ignore case
+- `-n` - Show line numbers
+- `-v` - Show lines that DON'T match
+- `-r` - Search recursively in directories"""
+
+        elif any(word in user_input for word in ['find', 'locate', 'search files']):
+            return """The **find** command searches for files and directories:
+
+**Basic Usage:**
+- `find . -name "filename"` - Find file by name in current directory
+- `find /home -type f -name "*.txt"` - Find all .txt files in /home
+- `find . -type d -name "project*"` - Find directories starting with "project"
+
+**Examples:**
+- `find . -name "*.py"` - Find all Python files
+- `find /var/log -name "*.log" -mtime -7` - Find log files modified in last 7 days
+- `find . -size +10M` - Find files larger than 10MB
+
+**Search types:**
+- `-type f` - Files only
+- `-type d` - Directories only
+- `-name` - Search by name (case sensitive)
+- `-iname` - Search by name (case insensitive)"""
+
+        # General Linux questions
+        elif any(word in user_input for word in ['linux', 'commands', 'terminal', 'bash']):
+            return """Linux commands are powerful tools for managing your system through the terminal. Here are the 10 essential commands you should know:
+
+**File Operations:**
+- `ls` - List files and directories
+- `cd` - Change directory
+- `pwd` - Show current directory
+- `cat` - Display file contents
+- `cp` - Copy files/directories
+- `mv` - Move/rename files
+
+**System Management:**
+- `chmod` - Change file permissions
+- `chown` - Change file ownership
+- `grep` - Search text in files
+- `find` - Search for files and directories
+
+Each command has many options and can be combined with others. What specific command would you like to learn about?"""
+
+
+        # Conversational responses
+        elif any(word in user_input for word in ['hello', 'hi', 'hey']):
+            return "Hello! I'm here to help you learn Linux commands. You can ask me about any of the 10 essential commands: ls, cd, pwd, cat, cp, mv, chmod, chown, grep, and find. What would you like to learn about?"
+
+        elif any(word in user_input for word in ['help', 'what can you do']):
+            return """I can help you learn and understand Linux commands! Here's what I can do:
+
+**Command Explanations:** I can explain how each Linux command works, with syntax and examples.
+
+**Practical Examples:** I'll show you real-world usage scenarios for each command.
+
+**Best Practices:** I can share tips and tricks for using commands effectively.
+
+**Troubleshooting:** Help you understand error messages and common issues.
+
+Try asking me about any of these commands: ls, cd, pwd, cat, cp, mv, chmod, chown, grep, find.
+
+For example: "How does the ls command work?" or "What's the difference between cp and mv?"""
+
+        # Common question patterns
+        elif any(word in user_input for word in ['how do i', 'how to', 'how can i']):
+            return """Great question! I can help you with Linux commands. Here are some common "how to" scenarios:
+
+**File Operations:**
+- "How do I list files?" → Use `ls` or `ls -la` for detailed view
+- "How do I copy files?" → Use `cp source destination`  
+- "How do I move files?" → Use `mv source destination`
+
+**Navigation:**
+- "How do I change directories?" → Use `cd /path/to/directory`
+- "How do I see where I am?" → Use `pwd`
+
+**File Content:**
+- "How do I view file contents?" → Use `cat filename.txt`
+- "How do I search in files?" → Use `grep "pattern" filename`
+
+What specific task are you trying to accomplish?"""
+
+        elif any(word in user_input for word in ['what is', 'what does', 'explain']):
+            return """I can explain any of the Linux commands! Here's what each one does:
+
+**File Listing & Navigation:**
+- `ls` - Shows files and directories in current location
+- `cd` - Changes your current directory
+- `pwd` - Shows your current directory path
+
+**File Operations:**
+- `cat` - Displays file contents on screen  
+- `cp` - Copies files or directories
+- `mv` - Moves or renames files/directories
+
+**Permissions & Ownership:**
+- `chmod` - Changes file permissions (who can read/write/execute)
+- `chown` - Changes file ownership
+
+**Search Operations:**
+- `grep` - Searches for text patterns inside files
+- `find` - Searches for files and directories by name/properties
+
+Which command would you like me to explain in detail?"""
+
+
+        # Default intelligent response with more variety
+        else:
+            import random
+            responses = [
+                """I'm here to help you learn Linux! I can assist with any of these essential commands:
+
+**File Management:** ls, cd, pwd, cat, cp, mv
+**System Control:** chmod, chown, grep, find
+
+Try asking me things like:
+- "Show me ls examples"
+- "How do I copy files?"
+- "What's the difference between cp and mv?"
+
+What would you like to explore?""",
+
+                """Let me help you with Linux commands! I can explain, demonstrate, and provide examples for:
+
+**Basic Commands:** ls (list), cd (change directory), pwd (current location)
+**File Operations:** cat (view), cp (copy), mv (move/rename)  
+**Advanced Tools:** chmod (permissions), chown (ownership), grep (search), find (locate)
+
+What specific Linux task are you working on?""",
+
+                """I'm your Linux command tutor! I can help you understand:
+
+✓ Command syntax and options
+✓ Real-world usage examples  
+✓ Best practices and tips
+✓ Common troubleshooting
+
+The 10 essential commands I cover: ls, cd, pwd, cat, cp, mv, chmod, chown, grep, find
+
+What aspect of Linux would you like to dive into?"""
+            ]
+            return random.choice(responses)
+
     def _get_general_response(self, user_input: str) -> str:
         """Generate general response for any topic"""
         

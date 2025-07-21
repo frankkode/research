@@ -8,10 +8,10 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
+from .group_assignment import get_balanced_study_group, get_group_statistics
 import json
 import secrets
 import string
-import random
 
 
 @csrf_exempt
@@ -50,9 +50,9 @@ def simple_register(request):
                 'error': 'Email already exists'
             })
         
-        # Generate participant ID and randomly assign study group
+        # Generate participant ID and assign balanced study group
         participant_id = f"USER_{secrets.token_hex(4).upper()}"
-        study_group = random.choice(['PDF', 'ChatGPT'])  # Random assignment
+        study_group = get_balanced_study_group()  # Balanced assignment
         
         # Create user with required fields
         user = User.objects.create_user(
@@ -259,9 +259,9 @@ def simple_google_auth(request):
                 username = f"{original_username}_{counter}"
                 counter += 1
             
-            # Generate participant ID and randomly assign study group
+            # Generate participant ID and assign balanced study group
             participant_id = f"GUSER_{secrets.token_hex(4).upper()}"
-            study_group = random.choice(['PDF', 'ChatGPT'])  # Random assignment
+            study_group = get_balanced_study_group()  # Balanced assignment
             
             # Create user
             user = User.objects.create_user(

@@ -9,10 +9,10 @@ from google.auth.transport import requests
 from google.oauth2 import id_token
 from .serializers import UserRegistrationSerializer, UserLoginSerializer, UserSerializer
 from .models import UserProfile
+from .group_assignment import get_balanced_study_group, get_group_statistics
 from apps.core.models import User
 import secrets
 import string
-import random
 
 
 @api_view(['POST', 'OPTIONS'])
@@ -24,8 +24,8 @@ def register(request):
     
     # Make a copy of request data to modify it
     data = request.data.copy()
-    # Override study_group with random assignment
-    data['study_group'] = random.choice(['PDF', 'ChatGPT'])
+    # Override study_group with balanced assignment
+    data['study_group'] = get_balanced_study_group()
     
     serializer = UserRegistrationSerializer(data=data)
     if serializer.is_valid():
@@ -145,8 +145,6 @@ def google_auth(request):
     """Authenticate user with Google OAuth token"""
     print(f"🔍 Google auth request from: {request.META.get('HTTP_ORIGIN', 'Unknown origin')}")
     print(f"🔍 Request method: {request.method}")
-    print(f"🔍 Request data: {request.data}")
-    print(f"🔍 Request body: {request.body}")
     print(f"🔍 Content type: {request.content_type}")
     
     # Early return with detailed error response for debugging
@@ -159,7 +157,6 @@ def google_auth(request):
                 'debug_info': {
                     'method': request.method,
                     'content_type': request.content_type,
-                    'body': str(request.body)[:200],
                     'headers': dict(request.headers)
                 }
             }, status=status.HTTP_400_BAD_REQUEST)
@@ -172,7 +169,7 @@ def google_auth(request):
     
     try:
         token = request.data.get('token')
-        study_group = request.data.get('study_group', random.choice(['PDF', 'ChatGPT']))  # Random assignment
+        study_group = request.data.get('study_group', get_balanced_study_group())  # Balanced assignment
         
         if not token:
             error_msg = 'Google token is required'
@@ -298,5 +295,17 @@ def cors_test(request):
         'method': request.method,
         'origin': request.META.get('HTTP_ORIGIN', 'None'),
         'headers': dict(request.headers),
+        'timestamp': timezone.now().isoformat(),
+    }, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def group_statistics(request):
+    """Get current group distribution statistics"""
+    stats = get_group_statistics()
+    return Response({
+        'message': 'Group statistics retrieved successfully',
+        'statistics': stats,
         'timestamp': timezone.now().isoformat(),
     }, status=status.HTTP_200_OK)
