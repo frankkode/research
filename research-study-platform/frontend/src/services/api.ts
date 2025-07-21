@@ -20,27 +20,28 @@ const getApiBaseUrl = () => {
   const envUrl = process.env.REACT_APP_API_URL;
   const environment = process.env.REACT_APP_ENVIRONMENT || process.env.NODE_ENV;
   const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const isRailwayProduction = window.location.hostname.includes('up.railway.app');
   
-  // Priority: 1) Explicit env var, 2) Auto-detect based on hostname, 3) Default to production
-  let apiUrl = envUrl;
-  
-  if (!apiUrl) {
-    apiUrl = isLocalhost 
-      ? 'http://localhost:8000/api'
-      : 'https://research-production-46af.up.railway.app/api';
+  // Hard-coded URLs to ensure they're correct
+  if (isLocalhost) {
+    return 'http://localhost:8000/api';
   }
   
-  // Development debugging - ensure correct URL is used
-  if (isLocalhost && !envUrl) {
-    apiUrl = 'http://localhost:8000/api';
-    console.log('🔧 Auto-detected local development environment');
+  if (isRailwayProduction) {
+    return 'https://research-production-46af.up.railway.app/api';
   }
+  
+  // Fallback to env var or production
+  let apiUrl = envUrl || 'https://research-production-46af.up.railway.app/api';
+  
+  console.log('🔧 Using fallback URL determination');
   
   // Log configuration for debugging (always show in production for debugging)
   console.log('🌐 API Configuration:', {
     apiUrl,
     environment,
     isLocalhost,
+    isRailwayProduction,
     envUrl,
     hostname: window.location.hostname,
     nodeEnv: process.env.NODE_ENV,

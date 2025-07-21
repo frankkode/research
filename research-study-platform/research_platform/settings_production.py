@@ -239,6 +239,9 @@ OPENAI_TEMPERATURE = env('OPENAI_TEMPERATURE', default=0.7, cast=float)
 OPENAI_RATE_LIMIT_REQUESTS = env('OPENAI_RATE_LIMIT_REQUESTS', default=60, cast=int)
 OPENAI_RATE_LIMIT_TOKENS = env('OPENAI_RATE_LIMIT_TOKENS', default=40000, cast=int)
 
+# Google OAuth Configuration for production
+GOOGLE_OAUTH2_CLIENT_ID = env('GOOGLE_OAUTH2_CLIENT_ID', default='875588092118-0d4ok5qjudm1uh0nd68mf5s54ofvdf4r.apps.googleusercontent.com')
+
 # Redis and Celery for production
 REDIS_URL = env('REDIS_URL', default='redis://localhost:6379')
 CELERY_BROKER_URL = env('REDIS_URL', default='redis://localhost:6379')

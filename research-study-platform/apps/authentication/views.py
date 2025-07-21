@@ -15,9 +15,17 @@ import string
 import random
 
 
-@api_view(['POST'])
+@api_view(['POST', 'OPTIONS'])
 @permission_classes([AllowAny])
 def register(request):
+    if request.method == 'OPTIONS':
+        from django.http import HttpResponse
+        response = HttpResponse()
+        response['Access-Control-Allow-Origin'] = request.META.get('HTTP_ORIGIN', '*')
+        response['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
+        response['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+        response['Access-Control-Allow-Credentials'] = 'true'
+        return response
     # Make a copy of request data to modify it
     data = request.data.copy()
     # Override study_group with random assignment
@@ -35,9 +43,17 @@ def register(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(['POST'])
+@api_view(['POST', 'OPTIONS'])
 @permission_classes([AllowAny])
 def login(request):
+    if request.method == 'OPTIONS':
+        from django.http import HttpResponse
+        response = HttpResponse()
+        response['Access-Control-Allow-Origin'] = request.META.get('HTTP_ORIGIN', '*')
+        response['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
+        response['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+        response['Access-Control-Allow-Credentials'] = 'true'
+        return response
     serializer = UserLoginSerializer(data=request.data)
     if serializer.is_valid():
         user = serializer.validated_data
@@ -135,10 +151,24 @@ def complete_interaction(request):
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-@api_view(['POST'])
+@api_view(['POST', 'OPTIONS'])
 @permission_classes([AllowAny])
 def google_auth(request):
     """Authenticate user with Google OAuth token"""
+    print(f"🔍 Google auth request from: {request.META.get('HTTP_ORIGIN', 'Unknown origin')}")
+    print(f"🔍 Request method: {request.method}")
+    print(f"🔍 Request data keys: {list(request.data.keys()) if hasattr(request, 'data') else 'No data'}")
+    
+    # Handle OPTIONS preflight request
+    if request.method == 'OPTIONS':
+        from django.http import HttpResponse
+        response = HttpResponse()
+        response['Access-Control-Allow-Origin'] = request.META.get('HTTP_ORIGIN', '*')
+        response['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
+        response['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+        response['Access-Control-Allow-Credentials'] = 'true'
+        return response
+    
     try:
         token = request.data.get('token')
         study_group = request.data.get('study_group', random.choice(['PDF', 'ChatGPT']))  # Random assignment
