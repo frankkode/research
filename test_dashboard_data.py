@@ -9,7 +9,7 @@ import json
 import sys
 
 # Configuration
-BASE_URL = 'http://localhost:8001/api'
+BASE_URL = 'http://localhost:8000/api'
 LOGIN_URL = f'{BASE_URL}/auth/login/'
 
 # Test credentials (create a test admin user)
@@ -28,7 +28,7 @@ def get_auth_token():
             print(f"❌ Login failed: {response.status_code} - {response.text}")
             return None
     except requests.exceptions.ConnectionError:
-        print("❌ Cannot connect to Django server. Make sure it's running on http://localhost:8001")
+        print("❌ Cannot connect to Django server. Make sure it's running on http://localhost:8000")
         return None
 
 def test_endpoint(url, token, endpoint_name):
@@ -56,7 +56,7 @@ def main():
     token = get_auth_token()
     if not token:
         print("\n💡 To fix login issues:")
-        print("1. Make sure Django server is running: python manage.py runserver 8001")
+        print("1. Make sure Django server is running: python manage.py runserver 8000")
         print("2. Create admin user: python manage.py createsuperuser")
         print("3. Use username 'admin' and password 'admin123'")
         return

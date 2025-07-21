@@ -4,8 +4,14 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from django.utils import timezone
+from django.conf import settings
+from google.auth.transport import requests
+from google.oauth2 import id_token
 from .serializers import UserRegistrationSerializer, UserLoginSerializer, UserSerializer
 from .models import UserProfile
+from apps.core.models import User
+import secrets
+import string
 
 
 @api_view(['POST'])
@@ -119,5 +125,96 @@ def complete_interaction(request):
     except Exception as e:
         return Response({
             'error': 'Failed to complete interaction',
+            'detail': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def google_auth(request):
+    """Authenticate user with Google OAuth token"""
+    try:
+        token = request.data.get('token')
+        study_group = request.data.get('study_group', 'PDF')  # Default to PDF
+        
+        if not token:
+            return Response({
+                'error': 'Google token is required'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Verify the Google token
+        try:
+            # You'll need to set GOOGLE_OAUTH2_CLIENT_ID in your settings
+            client_id = getattr(settings, 'GOOGLE_OAUTH2_CLIENT_ID', None)
+            if not client_id:
+                return Response({
+                    'error': 'Google OAuth not configured'
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            
+            idinfo = id_token.verify_oauth2_token(
+                token, requests.Request(), client_id
+            )
+            
+            email = idinfo.get('email')
+            name = idinfo.get('name', '')
+            
+            if not email:
+                return Response({
+                    'error': 'Email not provided by Google'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+        except ValueError:
+            return Response({
+                'error': 'Invalid Google token'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Check if user exists
+        try:
+            user = User.objects.get(email=email)
+            # User exists, log them in
+            token, created = Token.objects.get_or_create(user=user)
+            return Response({
+                'token': token.key,
+                'user': UserSerializer(user).data,
+                'created': False
+            }, status=status.HTTP_200_OK)
+            
+        except User.DoesNotExist:
+            # Create new user
+            username = email.split('@')[0]
+            # Generate unique participant ID
+            participant_id = f"GOOGLE_{secrets.token_hex(4).upper()}"
+            
+            # Ensure unique username and participant_id
+            base_username = username
+            counter = 1
+            while User.objects.filter(username=username).exists():
+                username = f"{base_username}{counter}"
+                counter += 1
+            
+            while User.objects.filter(participant_id=participant_id).exists():
+                participant_id = f"GOOGLE_{secrets.token_hex(4).upper()}"
+            
+            user = User.objects.create_user(
+                email=email,
+                username=username,
+                participant_id=participant_id,
+                study_group=study_group,
+                password=''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(32))
+            )
+            
+            # Create user profile
+            UserProfile.objects.create(user=user)
+            
+            token, created = Token.objects.get_or_create(user=user)
+            return Response({
+                'token': token.key,
+                'user': UserSerializer(user).data,
+                'created': True
+            }, status=status.HTTP_201_CREATED)
+            
+    except Exception as e:
+        return Response({
+            'error': 'Google authentication failed',
             'detail': str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

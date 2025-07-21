@@ -214,7 +214,7 @@ try:
         print(f'   {user.username}: {user.study_group} group, completed: {user.study_completed}')
     
     print('\n🎯 NEXT STEPS:')
-    print('1. Make sure Django server is running: python manage.py runserver 8001')
+    print('1. Make sure Django server is running: python manage.py runserver 8000')
     print('2. Go to Admin Dashboard → "Debug Data" tab')
     print('3. Click "Run Diagnostics" to verify data')
     print('4. Check other dashboard tabs for visualizations')

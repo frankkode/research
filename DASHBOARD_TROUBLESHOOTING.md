@@ -9,11 +9,11 @@ If your admin dashboards (Overview, Learning Analysis, Basic Analytics, Research
 ### ✅ Step 1: Check Backend Server
 ```bash
 cd research-study-platform/backend
-python manage.py runserver 8001
+python manage.py runserver 8000
 ```
 - ✅ Server should start without errors
-- ✅ Visit http://localhost:8001/admin/ - should show Django admin
-- ✅ Should see "Django REST framework" at http://localhost:8001/api/
+- ✅ Visit http://localhost:8000/admin/ - should show Django admin
+- ✅ Should see "Django REST framework" at http://localhost:8000/api/
 
 ### ✅ Step 2: Check Frontend Connection
 ```bash
@@ -155,7 +155,7 @@ After running `populate_test_data`, you should have:
 
 ## 🚨 If Still Not Working
 
-1. **Check both servers are running** (backend:8001, frontend:3000)
+1. **Check both servers are running** (backend:8000, frontend:3000)
 2. **Clear browser cache** and reload
 3. **Check browser console** for JavaScript errors
 4. **Verify you're logged in as admin user**
@@ -171,7 +171,7 @@ After running `populate_test_data`, you should have:
 cd research-study-platform/backend
 python manage.py migrate
 python manage.py populate_test_data --clear --participants 50
-python manage.py runserver 8001
+python manage.py runserver 8000
 
 # In another terminal
 cd research-study-platform/frontend  

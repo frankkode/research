@@ -15,7 +15,7 @@ import {
   CostLimits
 } from '../types';
 
-const API_BASE_URL = 'http://localhost:8000/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://research-production-46af.up.railway.app/api';
 
 // Debug log to see what URL is being used
 console.log('API_BASE_URL:', API_BASE_URL);
@@ -53,26 +53,26 @@ api.interceptors.response.use(
 
 export const authApi = {
   register: (data: RegisterData) => 
-    api.post<AuthResponse>('auth/register/', data),
+    api.post<AuthResponse>('/auth/register/', data),
   
   login: (data: LoginCredentials) =>
-    api.post<AuthResponse>('auth/login/', data),
+    api.post<AuthResponse>('/auth/login/', data),
   
   googleAuth: (token: string, studyGroup: string = 'PDF') =>
-    api.post<AuthResponse & { created: boolean }>('auth/google-auth/', { 
+    api.post<AuthResponse & { created: boolean }>('/auth/google-auth/', { 
       token, 
       study_group: studyGroup 
     }),
   
-  logout: () => api.post('auth/logout/'),
+  logout: () => api.post('/auth/logout/'),
   
-  getProfile: () => api.get<User>('auth/profile/'),
+  getProfile: () => api.get<User>('/auth/profile/'),
   
   submitConsent: (agreed: boolean) => 
-    api.post('auth/consent/', { agreed }),
+    api.post('/auth/consent/', { agreed }),
   
   completeInteraction: () => 
-    api.post('auth/complete-interaction/'),
+    api.post('/auth/complete-interaction/'),
 };
 
 export const studyApi = {
