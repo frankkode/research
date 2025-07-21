@@ -248,7 +248,7 @@ export const transferQuestions: Question[] = [
   }
 ];
 
-// Pre-assessment Questions (10 questions - test prior knowledge)
+// Pre-assessment Questions (10 questions- test prior knowledge)
 export const preAssessmentQuestions: Question[] = [
   {
     id: 'pre-1',
