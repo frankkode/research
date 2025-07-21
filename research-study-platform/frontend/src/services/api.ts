@@ -30,13 +30,13 @@ const getApiBaseUrl = () => {
       : 'https://research-production-46af.up.railway.app/api';
   }
   
-  // Force local URL for development debugging
-  if (isLocalhost) {
+  // Development debugging - ensure correct URL is used
+  if (isLocalhost && !envUrl) {
     apiUrl = 'http://localhost:8000/api';
-    console.log('🔧 FORCED LOCAL API URL FOR DEBUGGING');
+    console.log('🔧 Auto-detected local development environment');
   }
   
-  // Log configuration for debugging
+  // Log configuration for debugging (always show in production for debugging)
   console.log('🌐 API Configuration:', {
     apiUrl,
     environment,
@@ -44,7 +44,12 @@ const getApiBaseUrl = () => {
     envUrl,
     hostname: window.location.hostname,
     nodeEnv: process.env.NODE_ENV,
-    allReactEnvVars: Object.keys(process.env).filter(key => key.startsWith('REACT_APP_'))
+    origin: window.location.origin,
+    href: window.location.href,
+    allReactEnvVars: Object.keys(process.env).filter(key => key.startsWith('REACT_APP_')).reduce((acc, key) => {
+      acc[key] = process.env[key];
+      return acc;
+    }, {} as Record<string, string | undefined>)
   });
   
   return apiUrl;
