@@ -18,6 +18,10 @@ import random
 @api_view(['POST', 'OPTIONS'])
 @permission_classes([AllowAny])
 def register(request):
+    print(f"🔍 Register request from: {request.META.get('HTTP_ORIGIN', 'Unknown origin')}")
+    print(f"🔍 Request method: {request.method}")
+    print(f"🔍 Request data: {request.data}")
+    
     # Make a copy of request data to modify it
     data = request.data.copy()
     # Override study_group with random assignment
@@ -141,7 +145,30 @@ def google_auth(request):
     """Authenticate user with Google OAuth token"""
     print(f"🔍 Google auth request from: {request.META.get('HTTP_ORIGIN', 'Unknown origin')}")
     print(f"🔍 Request method: {request.method}")
-    print(f"🔍 Request data keys: {list(request.data.keys()) if hasattr(request, 'data') else 'No data'}")
+    print(f"🔍 Request data: {request.data}")
+    print(f"🔍 Request body: {request.body}")
+    print(f"🔍 Content type: {request.content_type}")
+    
+    # Early return with detailed error response for debugging
+    try:
+        if not hasattr(request, 'data') or not request.data:
+            error_msg = "No request data received"
+            print(f"❌ {error_msg}")
+            return Response({
+                'error': error_msg,
+                'debug_info': {
+                    'method': request.method,
+                    'content_type': request.content_type,
+                    'body': str(request.body)[:200],
+                    'headers': dict(request.headers)
+                }
+            }, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as debug_error:
+        print(f"❌ Debug error: {debug_error}")
+        return Response({
+            'error': 'Failed to process request',
+            'debug_error': str(debug_error)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     try:
         token = request.data.get('token')
@@ -154,29 +181,55 @@ def google_auth(request):
         
         # Verify the Google token
         try:
+            # Check if Google OAuth libraries are available
+            try:
+                from google.oauth2 import id_token
+                from google.auth.transport import requests as google_requests
+            except ImportError as import_error:
+                print(f"❌ Google OAuth libraries not available: {import_error}")
+                return Response({
+                    'error': 'Google OAuth libraries not installed',
+                    'detail': str(import_error)
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            
             # You'll need to set GOOGLE_OAUTH2_CLIENT_ID in your settings
             client_id = getattr(settings, 'GOOGLE_OAUTH2_CLIENT_ID', None)
+            print(f"🔑 Using Google Client ID: {client_id}")
+            
             if not client_id:
                 return Response({
                     'error': 'Google OAuth not configured'
                 }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             
+            # Verify the token
+            print(f"🔍 Verifying Google token: {token[:20]}...")
             idinfo = id_token.verify_oauth2_token(
-                token, requests.Request(), client_id
+                token, google_requests.Request(), client_id
             )
+            print(f"✅ Token verified successfully")
             
             email = idinfo.get('email')
             name = idinfo.get('name', '')
+            
+            print(f"📧 Google user: {email} ({name})")
             
             if not email:
                 return Response({
                     'error': 'Email not provided by Google'
                 }, status=status.HTTP_400_BAD_REQUEST)
             
-        except ValueError:
+        except ValueError as ve:
+            print(f"❌ Google token verification failed: {ve}")
             return Response({
-                'error': 'Invalid Google token'
+                'error': 'Invalid Google token',
+                'detail': str(ve)
             }, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as token_error:
+            print(f"❌ Google token verification error: {token_error}")
+            return Response({
+                'error': 'Google token verification failed',
+                'detail': str(token_error)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
         # Check if user exists
         try:
