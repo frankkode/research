@@ -50,6 +50,26 @@ class User(AbstractUser):
             self.post_quiz_completed
         ])
         return (completed_stages / 4) * 100
+    
+    def delete(self, *args, **kwargs):
+        """Override delete to ensure proper cleanup"""
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        user_id = self.id
+        user_email = self.email
+        
+        logger.info(f"Deleting user: {user_email} ({user_id})")
+        
+        # Delete related objects explicitly if needed
+        try:
+            # Let Django handle cascading deletions
+            result = super().delete(*args, **kwargs)
+            logger.info(f"User {user_email} deleted successfully")
+            return result
+        except Exception as e:
+            logger.error(f"Error deleting user {user_email}: {str(e)}")
+            raise
 
 
 class BaseModel(models.Model):
