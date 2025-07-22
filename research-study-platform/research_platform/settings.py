@@ -194,12 +194,7 @@ CELERY_TASK_ALWAYS_EAGER = env('CELERY_TASK_ALWAYS_EAGER', default=DEBUG, cast=b
 CELERY_TASK_EAGER_PROPAGATES = env('CELERY_TASK_EAGER_PROPAGATES', default=True, cast=bool)
 
 # Celery Beat Configuration
-try:
-    import django_celery_beat
-    CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
-except ImportError:
-    # Fallback if django_celery_beat is not available
-    CELERY_BEAT_SCHEDULER = 'celery.beat:PersistentScheduler'
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
 # Task routing and execution
 CELERY_TASK_ROUTES = {
