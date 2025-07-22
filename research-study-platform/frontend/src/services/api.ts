@@ -231,6 +231,9 @@ export const researchApi = {
   getDashboardOverview: () => 
     api.get('/research/dashboard/overview/'),
   
+  deleteParticipant: (participantId: string) =>
+    api.delete(`/research/participants/${participantId}/delete/`),
+  
   getActivityTimeline: (days: number = 30) => 
     api.get(`/research/dashboard/activity_timeline/?days=${days}`),
   

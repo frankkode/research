@@ -127,10 +127,16 @@ const ParticipantManager: React.FC = () => {
     }
 
     try {
+      // Call the API to delete from database
+      await researchApi.deleteParticipant(participantId);
+      
+      // Update local state only after successful API call
       setParticipants(prev => prev.filter(p => p.id !== participantId));
-      toast.success('Participant deleted successfully');
-    } catch (error) {
-      toast.error('Failed to delete participant');
+      toast.success('Participant deleted successfully from database');
+    } catch (error: any) {
+      console.error('Error deleting participant:', error);
+      const errorMessage = error.response?.data?.error || 'Failed to delete participant';
+      toast.error(errorMessage);
     }
   };
 

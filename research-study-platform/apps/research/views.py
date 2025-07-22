@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from django.db.models import Count, Q, Avg, Sum
 from django.contrib.auth import get_user_model
 from django.utils import timezone
+from django.db import transaction
 from django.http import HttpResponse, JsonResponse
 from django.contrib.auth.decorators import user_passes_test
 from django.utils.decorators import method_decorator
@@ -951,6 +952,47 @@ def get_all_participants(request):
             })
         
         return Response(participants_data, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_participant(request, participant_id):
+    """Delete a participant and all their data"""
+    try:
+        # Check if user is staff
+        if not (request.user.is_staff or request.user.is_superuser):
+            return Response({'error': 'Staff access required'}, status=status.HTTP_403_FORBIDDEN)
+        
+        # Get the user to delete
+        try:
+            user_to_delete = User.objects.get(id=participant_id)
+        except User.DoesNotExist:
+            return Response({'error': 'Participant not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        # Prevent deleting admin users
+        if user_to_delete.is_staff or user_to_delete.is_superuser:
+            return Response({
+                'error': 'Cannot delete admin users'
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        # Store user info for logging
+        user_email = user_to_delete.email
+        user_participant_id = user_to_delete.participant_id
+        
+        # Delete the user (cascading will handle related objects)
+        with transaction.atomic():
+            user_to_delete.delete()
+            
+            # Verify deletion
+            if User.objects.filter(id=participant_id).exists():
+                raise Exception(f"Failed to delete user {user_email}")
+        
+        return Response({
+            'message': f'Participant {user_participant_id} ({user_email}) deleted successfully'
+        }, status=status.HTTP_200_OK)
         
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

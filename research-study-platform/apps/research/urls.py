@@ -13,6 +13,7 @@ router.register(r'dashboard', views.ResearchDashboardView, basename='dashboard')
 urlpatterns = [
     # Function-based endpoints (must come before router to avoid conflicts)
     path('participants/all/', views.get_all_participants, name='get_all_participants'),
+    path('participants/<str:participant_id>/delete/', views.delete_participant, name='delete_participant'),
     path('export/all/', views.export_all_data, name='export_all_data'),
     path('export/chat/', views.export_chat_interactions, name='export_chat_interactions'),
     path('export/pdf/', views.export_pdf_interactions, name='export_pdf_interactions'),
