@@ -284,7 +284,21 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
       setAttempt(quizAttempt);
       onComplete?.(quizAttempt);
       
-      toast.success('Quiz completed successfully!');
+      // Show different success messages based on quiz type
+      if (quizType === 'immediate_recall') {
+        // Special success message for post-quiz completion
+        toast.success('🎉 Congratulations! Post-quiz completed successfully!', {
+          duration: 5000,
+          style: {
+            background: '#10B981',
+            color: 'white',
+            fontSize: '16px',
+            fontWeight: 'bold'
+          }
+        });
+      } else {
+        toast.success('Quiz completed successfully!');
+      }
       
     } catch (error) {
       toast.error('Failed to submit quiz');
@@ -351,17 +365,50 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({
   }
 
   if (attempt) {
+    const isPostQuiz = quizType === 'immediate_recall';
+    
     return (
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-4xl mx-auto px-4">
           <div className="bg-white rounded-lg shadow-lg p-8 text-center">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckCircleIcon className="h-8 w-8 text-green-600" />
+            <div className={`w-16 h-16 ${isPostQuiz ? 'bg-gradient-to-r from-green-400 to-blue-500' : 'bg-green-100'} rounded-full flex items-center justify-center mx-auto mb-4`}>
+              <CheckCircleIcon className={`h-8 w-8 ${isPostQuiz ? 'text-white' : 'text-green-600'}`} />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Quiz Completed!</h2>
-            <p className="text-gray-600 mb-6">
-              Thank you for completing the {quiz.title.toLowerCase()}.
-            </p>
+            
+            {isPostQuiz ? (
+              <>
+                <h2 className="text-3xl font-bold text-gray-900 mb-2">🎉 Congratulations!</h2>
+                <p className="text-lg text-gray-700 mb-4">
+                  You've successfully completed the post-assessment quiz!
+                </p>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+                  <h3 className="text-xl font-semibold text-blue-900 mb-3">
+                    📚 What's Next?
+                  </h3>
+                  <div className="text-left space-y-3 text-blue-800">
+                    <p className="flex items-start space-x-2">
+                      <span className="text-blue-500">⏰</span>
+                      <span><strong>Transfer Knowledge Quiz:</strong> You'll be able to access the final transfer quiz in <strong>24 hours</strong></span>
+                    </p>
+                    <p className="flex items-start space-x-2">
+                      <span className="text-blue-500">📧</span>
+                      <span><strong>Automated Reminder:</strong> We'll send you a link via email when it's available</span>
+                    </p>
+                    <p className="flex items-start space-x-2">
+                      <span className="text-blue-500">💬</span>
+                      <span><strong>Need Help?:</strong> If you don't receive the link within 24 hours, please contact the admin</span>
+                    </p>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">Quiz Completed!</h2>
+                <p className="text-gray-600 mb-6">
+                  Thank you for completing the {quiz.title.toLowerCase()}.
+                </p>
+              </>
+            )}
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               <div className="bg-blue-50 p-4 rounded-lg">

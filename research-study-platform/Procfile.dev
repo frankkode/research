@@ -1,0 +1,4 @@
+# Development Procfile for local use with honcho/foreman
+web: python manage.py runserver 0.0.0.0:8000
+worker: celery -A research_platform worker --loglevel=info --concurrency=2
+beat: celery -A research_platform beat --loglevel=info

@@ -3,6 +3,7 @@ from . import views
 
 urlpatterns = [
     path('type/<str:quiz_type>/', views.get_quiz_by_type, name='get_quiz_by_type'),
+    path('transfer-quiz-access/', views.check_transfer_quiz_access, name='check_transfer_quiz_access'),
     path('<uuid:quiz_id>/', views.get_quiz, name='get_quiz'),
     path('<uuid:quiz_id>/start/', views.start_quiz, name='start_quiz'),
     path('attempt/<uuid:attempt_id>/answer/', views.submit_answer, name='submit_answer'),

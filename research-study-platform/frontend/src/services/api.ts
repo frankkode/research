@@ -166,6 +166,8 @@ export const quizApi = {
   
   getQuizByType: (quizType: string) => api.get<Quiz>(`/quizzes/type/${quizType}/`),
   
+  checkTransferQuizAccess: () => api.get('/quizzes/transfer-quiz-access/'),
+  
   startQuiz: (quizId: string, sessionId: string) =>
     api.post<QuizAttempt>(`/quizzes/${quizId}/start/`, { session_id: sessionId }),
   

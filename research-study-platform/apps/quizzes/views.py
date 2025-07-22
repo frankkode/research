@@ -22,9 +22,74 @@ def get_quiz(request, quiz_id):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
+def check_transfer_quiz_access(request):
+    """Check if user can access transfer quiz (24 hours after post-quiz completion)"""
+    try:
+        user = request.user
+        
+        # Check if user has completed post-quiz
+        if not user.post_quiz_completed or not user.post_quiz_completed_at:
+            return Response({
+                'access_granted': False,
+                'reason': 'post_quiz_not_completed',
+                'message': 'You must complete the post-assessment quiz first.'
+            }, status=status.HTTP_200_OK)
+        
+        # Check if 24 hours have passed
+        from datetime import timedelta
+        now = timezone.now()
+        time_since_post_quiz = now - user.post_quiz_completed_at
+        hours_passed = time_since_post_quiz.total_seconds() / 3600
+        
+        if hours_passed < 24:
+            hours_remaining = 24 - hours_passed
+            return Response({
+                'access_granted': False,
+                'reason': 'waiting_period',
+                'message': f'Transfer quiz will be available in {hours_remaining:.1f} hours.',
+                'hours_remaining': round(hours_remaining, 1),
+                'available_at': (user.post_quiz_completed_at + timedelta(hours=24)).isoformat()
+            }, status=status.HTTP_200_OK)
+        
+        # Check if user has already completed transfer quiz
+        if user.study_completed:
+            return Response({
+                'access_granted': False,
+                'reason': 'already_completed',
+                'message': 'You have already completed the transfer quiz.'
+            }, status=status.HTTP_200_OK)
+        
+        # Access granted
+        return Response({
+            'access_granted': True,
+            'message': 'You can now access the transfer quiz!',
+            'post_quiz_completed_at': user.post_quiz_completed_at.isoformat(),
+            'notification_sent': user.transfer_quiz_notification_sent
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        return Response({
+            'error': 'Failed to check transfer quiz access',
+            'detail': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def get_quiz_by_type(request, quiz_type):
     """Get quiz by type (immediate_recall, transfer, pre_assessment)"""
     try:
+        # Special access control for transfer quiz
+        if quiz_type == 'transfer':
+            access_check = check_transfer_quiz_access(request)
+            access_data = access_check.data
+            
+            if not access_data.get('access_granted', False):
+                return Response({
+                    'error': 'Transfer quiz access denied',
+                    'access_info': access_data
+                }, status=status.HTTP_403_FORBIDDEN)
+        
         # Map frontend quiz types to backend quiz types
         type_mapping = {
             'immediate_recall': 'post',
@@ -206,6 +271,29 @@ def submit_quiz_results(request):
         elif quiz_type == 'immediate_recall':
             user.post_quiz_completed = True
             user.post_quiz_completed_at = timezone.now()
+            
+            # Schedule transfer quiz notification for 24 hours later
+            from datetime import timedelta
+            
+            transfer_available_time = timezone.now() + timedelta(hours=24)
+            try:
+                # Try to import and use Celery task
+                from .tasks import schedule_transfer_quiz_notification
+                schedule_transfer_quiz_notification.delay(
+                    user_id=user.id,
+                    scheduled_time=transfer_available_time.isoformat(),
+                    user_email=user.email
+                )
+            except ImportError as import_error:
+                # Celery or the task module is not available
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.warning(f"Celery task not available, skipping notification scheduling: {str(import_error)}")
+            except Exception as e:
+                # If celery is not running or any other error, log the error but don't fail the request
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.warning(f"Failed to schedule transfer quiz notification: {str(e)}")
         elif quiz_type == 'transfer':
             user.study_completed = True
             user.study_completed_at = timezone.now()

@@ -28,6 +28,10 @@ class User(AbstractUser):
     post_quiz_completed_at = models.DateTimeField(null=True, blank=True)
     study_completed_at = models.DateTimeField(null=True, blank=True)
     
+    # Transfer quiz notification tracking
+    transfer_quiz_notification_sent = models.BooleanField(default=False)
+    transfer_quiz_notification_sent_at = models.DateTimeField(null=True, blank=True)
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     

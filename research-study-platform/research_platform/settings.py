@@ -30,6 +30,7 @@ THIRD_PARTY_APPS = [
     'rest_framework.authtoken',
     'corsheaders',
     'django_extensions',
+    'django_celery_beat',
 ]
 
 LOCAL_APPS = [
@@ -165,8 +166,50 @@ client_id = getattr(settings, 'GOOGLE_OAUTH2_CLIENT_ID', None)
 GOOGLE_OAUTH2_CLIENT_ID = env('GOOGLE_OAUTH2_CLIENT_ID', default='')
 
 REDIS_URL = env('REDIS_URL', default='redis://localhost:6379')
-CELERY_BROKER_URL = env('REDIS_URL', default='redis://localhost:6379')
-CELERY_RESULT_BACKEND = env('REDIS_URL', default='redis://localhost:6379')
+
+# Celery Configuration
+# Use different Redis databases for broker and results to avoid conflicts
+def get_redis_url_with_db(base_url, db_number):
+    """Helper to append database number to Redis URL"""
+    if base_url.endswith('/'):
+        return f"{base_url.rstrip('/')}/{db_number}"
+    elif '/' in base_url.split('://', 1)[1]:
+        # URL already has a database number, replace it
+        parts = base_url.rsplit('/', 1)
+        return f"{parts[0]}/{db_number}"
+    else:
+        return f"{base_url}/{db_number}"
+
+CELERY_BROKER_URL = env('CELERY_BROKER_URL', default=get_redis_url_with_db(REDIS_URL, 0))
+CELERY_RESULT_BACKEND = env('CELERY_RESULT_BACKEND', default=get_redis_url_with_db(REDIS_URL, 1))
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = TIME_ZONE
+
+# Celery Worker Configuration
+CELERY_WORKER_CONCURRENCY = env('CELERY_WORKER_CONCURRENCY', default=2, cast=int)
+CELERY_WORKER_MAX_TASKS_PER_CHILD = env('CELERY_WORKER_MAX_TASKS_PER_CHILD', default=1000, cast=int)
+CELERY_TASK_ALWAYS_EAGER = env('CELERY_TASK_ALWAYS_EAGER', default=DEBUG, cast=bool)
+CELERY_TASK_EAGER_PROPAGATES = env('CELERY_TASK_EAGER_PROPAGATES', default=True, cast=bool)
+
+# Celery Beat Configuration
+try:
+    import django_celery_beat
+    CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+except ImportError:
+    # Fallback if django_celery_beat is not available
+    CELERY_BEAT_SCHEDULER = 'celery.beat:PersistentScheduler'
+
+# Task routing and execution
+CELERY_TASK_ROUTES = {
+    'apps.quizzes.tasks.schedule_transfer_quiz_notification': {'queue': 'notifications'},
+    'apps.quizzes.tasks.send_manual_transfer_quiz_link': {'queue': 'notifications'},
+}
+
+# Celery task time limits (in seconds)
+CELERY_TASK_SOFT_TIME_LIMIT = 300  # 5 minutes
+CELERY_TASK_TIME_LIMIT = 600       # 10 minutes
 
 LOGGING = {
     'version': 1,
@@ -201,3 +244,15 @@ LOGGING = {
         },
     },
 }
+
+# Research Platform Specific Settings
+MAX_PARTICIPANTS_PER_STUDY = env('MAX_PARTICIPANTS_PER_STUDY', default=1000, cast=int)
+SESSION_TIMEOUT_MINUTES = env('SESSION_TIMEOUT_MINUTES', default=30, cast=int)
+QUIZ_TIME_LIMIT_MINUTES = env('QUIZ_TIME_LIMIT_MINUTES', default=45, cast=int)
+PDF_MAX_SIZE_MB = env('PDF_MAX_SIZE_MB', default=50, cast=int)
+
+# Frontend URL for email links
+FRONTEND_URL = env('FRONTEND_URL', default='http://localhost:3000')
+
+# Email settings
+DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='noreply@research-platform.com')
