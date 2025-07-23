@@ -18,8 +18,10 @@ import ComprehensiveAnalyticsDashboard from './ComprehensiveAnalyticsDashboard';
 import ParticipantMonitoringDashboard from './ParticipantMonitoringDashboard';
 import LearningEffectivenessDashboard from './LearningEffectivenessDashboard';
 import DataDebugger from './DataDebugger';
+import ResearchDataVisualization from '../research/ResearchDataVisualization';
+import TestDataVisualization from '../research/TestDataVisualization';
 
-type AdminTab = 'participants' | 'monitoring' | 'analytics' | 'research' | 'effectiveness' | 'comprehensive' | 'export' | 'privacy' | 'utilities' | 'debug';
+type AdminTab = 'participants' | 'monitoring' | 'analytics' | 'research' | 'effectiveness' | 'comprehensive' | 'visualization' | 'test' | 'export' | 'privacy' | 'utilities' | 'debug';
 
 const AdminDashboard: React.FC = () => {
   const { user } = useAuth();
@@ -74,6 +76,18 @@ const AdminDashboard: React.FC = () => {
       description: 'Original research analytics with detailed charts'
     },
     {
+      id: 'visualization' as AdminTab,
+      name: 'Data Visualization',
+      icon: ChartBarIcon,
+      description: 'Interactive research data visualization dashboard'
+    },
+    {
+      id: 'test' as AdminTab,
+      name: 'Test Charts',
+      icon: ChartBarIcon,
+      description: 'Test visualization components with sample data'
+    },
+    {
       id: 'export' as AdminTab,
       name: 'Data Export',
       icon: DocumentArrowDownIcon,
@@ -113,6 +127,10 @@ const AdminDashboard: React.FC = () => {
         return <AnalyticsDashboard />;
       case 'research':
         return <ResearchAnalyticsDashboard />;
+      case 'visualization':
+        return <ResearchDataVisualization />;
+      case 'test':
+        return <TestDataVisualization />;
       case 'export':
         return <div className="p-6">Data export functionality coming soon...</div>;
       case 'privacy':

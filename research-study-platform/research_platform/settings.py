@@ -31,6 +31,7 @@ THIRD_PARTY_APPS = [
     'corsheaders',
     'django_extensions',
     'django_celery_beat',
+    # CSP will be added when installed: 'csp',
 ]
 
 LOCAL_APPS = [
@@ -251,3 +252,12 @@ FRONTEND_URL = env('FRONTEND_URL', default='http://localhost:3000')
 
 # Email settings
 DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='noreply@research-platform.com')
+
+# Content Security Policy (CSP) Settings
+# Allow 'unsafe-eval' for recharts/d3 visualization library
+CSP_SCRIPT_SRC = ["'self'", "'unsafe-inline'", "'unsafe-eval'"]
+CSP_STYLE_SRC = ["'self'", "'unsafe-inline'"]
+CSP_IMG_SRC = ["'self'", "data:", "blob:"]
+CSP_FONT_SRC = ["'self'", "data:"]
+CSP_CONNECT_SRC = ["'self'"]
+CSP_DEFAULT_SRC = ["'self'"]

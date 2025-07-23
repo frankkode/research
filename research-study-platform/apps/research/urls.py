@@ -19,6 +19,7 @@ urlpatterns = [
     path('export/pdf/', views.export_pdf_interactions, name='export_pdf_interactions'),
     path('export/quiz/', views.export_quiz_responses, name='export_quiz_responses'),
     path('statistics/', views.get_study_statistics, name='get_study_statistics'),
+    path('comprehensive-data/', views.comprehensive_research_data, name='comprehensive_research_data'),
     
     # New API endpoints
     path('', include(router.urls)),

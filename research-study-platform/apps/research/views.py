@@ -996,3 +996,318 @@ def delete_participant(request, participant_id):
         
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+@user_passes_test(is_staff_user)
+def comprehensive_research_data(request):
+    """Get comprehensive research data for visualization dashboard"""
+    try:
+        # Always try to get real data first
+        user_count = User.objects.count()
+        print(f"DEBUG: Found {user_count} users in database")
+        
+        if user_count == 0:
+            # Return sample data only if no users exist
+            return Response(_get_sample_research_data(), status=status.HTTP_200_OK)
+        
+        # Get all participants with detailed information
+        participants = []
+        for user in User.objects.all():
+            # Calculate completion percentage
+            steps = [
+                user.consent_completed,
+                user.pre_quiz_completed, 
+                user.interaction_completed,
+                user.post_quiz_completed
+            ]
+            completed_steps = sum(1 for step in steps if step)
+            completion_percentage = int((completed_steps / len(steps)) * 100)
+            
+            # Get total study time from sessions
+            total_study_time = 0
+            sessions = StudySession.objects.filter(user=user)
+            if sessions.exists():
+                session_duration = sessions.aggregate(total=Sum('total_duration'))['total']
+                if session_duration and str(session_duration) != 'nan':
+                    total_study_time = float(session_duration) / 60  # Convert to minutes
+                else:
+                    total_study_time = 0
+            
+            # Ensure total_study_time is never NaN
+            if str(total_study_time) == 'nan' or total_study_time is None:
+                total_study_time = 0
+            
+            # Try to get user profile data
+            try:
+                from apps.authentication.models import UserProfile
+                profile = UserProfile.objects.get(user=user)
+                age_range = profile.age or 'Not specified'
+                education_level = profile.education_level or 'Not specified'
+            except:
+                age_range = 'Not specified'
+                education_level = 'Not specified'
+            
+            participants.append({
+                'id': str(user.id),
+                'participant_id': user.participant_id or f'P{user.id}',
+                'study_group': user.study_group or 'UNASSIGNED',
+                'age_range': age_range,
+                'education_level': education_level,
+                'technical_background': 'Not specified',
+                'consent_given': user.consent_completed,
+                'completion_percentage': completion_percentage,
+                'total_study_time': total_study_time,
+                'created_at': user.created_at.isoformat() if user.created_at else None,
+            })
+            print(f"DEBUG: User {user.id} - Group: {user.study_group}, Completion: {completion_percentage}%")
+        
+        # Get interaction data from study logs
+        interactions = []
+        for log in StudyLog.objects.all():
+            interactions.append({
+                'id': str(log.id),
+                'participant_id': log.user.participant_id if log.user else 'Unknown',
+                'event_type': log.log_type,
+                'event_data': log.event_data,
+                'timestamp': log.timestamp.isoformat(),
+                'reaction_time_ms': 0,  # Would need to calculate this
+                'page_url': '',  # Would need to add this field
+                'study_group': log.user.study_group if log.user else 'Unknown',
+            })
+        
+        # Get chat session data
+        chat_sessions = []
+        for session in ChatSession.objects.all():
+            chat_sessions.append({
+                'id': str(session.id),
+                'participant_id': session.user.participant_id or f'P{session.user.id}',
+                'total_messages': session.total_messages or 0,
+                'total_tokens_used': session.total_tokens_used or 0,
+                'total_estimated_cost_usd': float(session.total_estimated_cost_usd or 0),
+                'linux_command_queries': session.linux_command_queries or 0,
+                'average_response_time_ms': session.average_response_time_ms or 0,
+                'engagement_score': session.engagement_score or 0,
+                'chat_started_at': session.chat_started_at.isoformat() if session.chat_started_at else None,
+                'chat_ended_at': session.chat_ended_at.isoformat() if session.chat_ended_at else None,
+            })
+            print(f"DEBUG: Chat session {session.id} - User: {session.user.id}, Messages: {session.total_messages or 0}")
+        
+        # Get PDF session data
+        pdf_sessions = []
+        for session in PDFSession.objects.all():
+            pdf_sessions.append({
+                'id': str(session.id),
+                'participant_id': session.user.participant_id or f'P{session.user.id}',
+                'reading_completion_percentage': session.reading_completion_percentage or 0,
+                'total_time_spent_minutes': session.total_time_spent_minutes or 0,
+                'pages_visited_count': session.pages_visited_count or 0,
+                'focus_changes': session.focus_changes or 0,
+                'interaction_count': session.interaction_count or 0,
+                'reading_speed_wpm': session.reading_speed_wpm or 0,
+                'session_started_at': session.session_started_at.isoformat() if session.session_started_at else None,
+                'session_ended_at': session.session_ended_at.isoformat() if session.session_ended_at else None,
+            })
+            print(f"DEBUG: PDF session {session.id} - User: {session.user.id}, Completion: {session.reading_completion_percentage or 0}%")
+        
+        # Get quiz results data
+        quiz_results = []
+        for attempt in QuizAttempt.objects.all():
+            # Ensure all numeric values are valid numbers, not None or NaN
+            score = attempt.percentage_score
+            if score is None or score == '' or str(score) == 'nan':
+                score = 0
+            
+            time_taken = attempt.time_taken_seconds
+            if time_taken is None or time_taken == '' or str(time_taken) == 'nan':
+                time_taken = 0
+                
+            correct_answers = attempt.score
+            if correct_answers is None or correct_answers == '' or str(correct_answers) == 'nan':
+                correct_answers = 0
+                
+            total_questions = attempt.total_questions
+            if total_questions is None or total_questions == '' or str(total_questions) == 'nan':
+                total_questions = 0
+            
+            quiz_results.append({
+                'id': str(attempt.id),
+                'participant_id': attempt.user.participant_id or f'P{attempt.user.id}',
+                'quiz_type': attempt.quiz.quiz_type or 'unknown',
+                'study_group': attempt.user.study_group or 'UNASSIGNED',
+                'score_percentage': float(score),
+                'time_taken_seconds': float(time_taken),
+                'correct_answers': float(correct_answers),
+                'total_questions': float(total_questions),
+                'completed_at': attempt.completed_at.isoformat() if attempt.completed_at else None,
+            })
+            print(f"DEBUG: Quiz {attempt.id} - User: {attempt.user.id}, Type: {attempt.quiz.quiz_type}, Score: {score}%")
+        
+        # Get study session data
+        study_sessions = []
+        for session in StudySession.objects.all():
+            study_sessions.append({
+                'id': str(session.id),
+                'participant_id': session.user.participant_id,
+                'study_group': session.user.study_group,
+                'current_phase': session.current_phase,
+                'is_completed': session.is_completed,
+                'total_duration_minutes': session.total_duration / 60 if session.total_duration else 0,
+                'consent_duration_minutes': session.consent_duration / 60 if session.consent_duration else 0,
+                'pre_quiz_duration_minutes': session.pre_quiz_duration / 60 if session.pre_quiz_duration else 0,
+                'interaction_duration_minutes': session.interaction_duration / 60 if session.interaction_duration else 0,
+                'post_quiz_duration_minutes': session.post_quiz_duration / 60 if session.post_quiz_duration else 0,
+                'session_started_at': session.session_started_at.isoformat() if session.session_started_at else None,
+            })
+        
+        comprehensive_data = {
+            'participants': participants,
+            'interactions': interactions,
+            'chatSessions': chat_sessions,
+            'pdfSessions': pdf_sessions,
+            'quizResults': quiz_results,
+            'studySessions': study_sessions,
+        }
+        
+        print(f"DEBUG: Returning data with {len(participants)} participants, {len(quiz_results)} quiz results, {len(chat_sessions)} chat sessions, {len(pdf_sessions)} PDF sessions")
+        
+        return Response(comprehensive_data, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+def _get_sample_research_data():
+    """Generate sample research data for demonstration purposes"""
+    from datetime import datetime, timedelta
+    import random
+    
+    # Generate sample participants
+    participants = []
+    for i in range(24):  # 12 ChatGPT, 12 PDF
+        group = 'CHATGPT' if i < 12 else 'PDF'
+        completion_rate = random.randint(75, 100) if group == 'PDF' else random.randint(60, 95)
+        study_time = random.randint(25, 45) if group == 'PDF' else random.randint(20, 35)
+        
+        participants.append({
+            'id': f'user_{i+1}',
+            'participant_id': f'P{i+1:03d}',
+            'study_group': group,
+            'age_range': random.choice(['18-25', '26-35', '36-45', '46-55']),
+            'education_level': random.choice(['Bachelor', 'Master', 'PhD', 'High School']),
+            'technical_background': random.choice(['Beginner', 'Intermediate', 'Advanced']),
+            'consent_given': True,
+            'completion_percentage': completion_rate,
+            'total_study_time': study_time,
+            'created_at': (datetime.now() - timedelta(days=random.randint(1, 30))).isoformat(),
+        })
+    
+    # Generate sample interactions
+    interactions = []
+    for i, participant in enumerate(participants):
+        for j in range(random.randint(15, 40)):
+            interactions.append({
+                'id': f'interaction_{i}_{j}',
+                'participant_id': participant['participant_id'],
+                'event_type': random.choice(['page_view', 'button_click', 'scroll', 'focus_change', 'quiz_answer']),
+                'event_data': {'action': 'sample_interaction'},
+                'timestamp': (datetime.now() - timedelta(minutes=random.randint(1, 1000))).isoformat(),
+                'reaction_time_ms': random.randint(200, 2000),
+                'page_url': f'/study/page{random.randint(1, 5)}',
+                'study_group': participant['study_group'],
+            })
+    
+    # Generate sample chat sessions (only for ChatGPT group)
+    chat_sessions = []
+    for participant in participants:
+        if participant['study_group'] == 'CHATGPT':
+            chat_sessions.append({
+                'id': f'chat_{participant["id"]}',
+                'participant_id': participant['participant_id'],
+                'total_messages': random.randint(8, 25),
+                'total_tokens_used': random.randint(1500, 8000),
+                'total_estimated_cost_usd': round(random.uniform(0.05, 0.30), 3),
+                'linux_command_queries': random.randint(3, 12),
+                'average_response_time_ms': random.randint(800, 2500),
+                'engagement_score': random.randint(65, 95),
+                'chat_started_at': (datetime.now() - timedelta(minutes=random.randint(100, 500))).isoformat(),
+                'chat_ended_at': (datetime.now() - timedelta(minutes=random.randint(50, 200))).isoformat(),
+            })
+    
+    # Generate sample PDF sessions (only for PDF group)
+    pdf_sessions = []
+    for participant in participants:
+        if participant['study_group'] == 'PDF':
+            pdf_sessions.append({
+                'id': f'pdf_{participant["id"]}',
+                'participant_id': participant['participant_id'],
+                'reading_completion_percentage': random.randint(70, 100),
+                'total_time_spent_minutes': random.randint(25, 45),
+                'pages_visited_count': random.randint(15, 25),
+                'focus_changes': random.randint(5, 20),
+                'interaction_count': random.randint(30, 80),
+                'reading_speed_wpm': random.randint(180, 280),
+                'session_started_at': (datetime.now() - timedelta(minutes=random.randint(100, 500))).isoformat(),
+                'session_ended_at': (datetime.now() - timedelta(minutes=random.randint(50, 200))).isoformat(),
+            })
+    
+    # Generate sample quiz results
+    quiz_results = []
+    for participant in participants:
+        # Pre-quiz
+        pre_score = random.randint(40, 70)
+        quiz_results.append({
+            'id': f'quiz_pre_{participant["id"]}',
+            'participant_id': participant['participant_id'],
+            'quiz_type': 'pre',
+            'study_group': participant['study_group'],
+            'score_percentage': pre_score,
+            'time_taken_seconds': random.randint(600, 1200),
+            'correct_answers': int(pre_score * 0.1),  # Assuming 10 questions
+            'total_questions': 10,
+            'completed_at': (datetime.now() - timedelta(hours=random.randint(2, 48))).isoformat(),
+        })
+        
+        # Post-quiz (with learning gain)
+        if participant['completion_percentage'] >= 75:
+            learning_gain = random.randint(10, 25) if participant['study_group'] == 'CHATGPT' else random.randint(5, 20)
+            post_score = min(100, pre_score + learning_gain)
+            quiz_results.append({
+                'id': f'quiz_post_{participant["id"]}',
+                'participant_id': participant['participant_id'],
+                'quiz_type': 'post',
+                'study_group': participant['study_group'],
+                'score_percentage': post_score,
+                'time_taken_seconds': random.randint(500, 1000),
+                'correct_answers': int(post_score * 0.1),
+                'total_questions': 10,
+                'completed_at': (datetime.now() - timedelta(minutes=random.randint(30, 120))).isoformat(),
+            })
+    
+    # Generate sample study sessions
+    study_sessions = []
+    for participant in participants:
+        total_duration = participant['total_study_time']
+        study_sessions.append({
+            'id': f'session_{participant["id"]}',
+            'participant_id': participant['participant_id'],
+            'study_group': participant['study_group'],
+            'current_phase': 'completed' if participant['completion_percentage'] == 100 else 'in_progress',
+            'is_completed': participant['completion_percentage'] == 100,
+            'total_duration_minutes': total_duration,
+            'consent_duration_minutes': random.randint(2, 5),
+            'pre_quiz_duration_minutes': random.randint(8, 15),
+            'interaction_duration_minutes': total_duration - random.randint(15, 25),
+            'post_quiz_duration_minutes': random.randint(8, 12) if participant['completion_percentage'] >= 75 else 0,
+            'session_started_at': (datetime.now() - timedelta(hours=random.randint(1, 72))).isoformat(),
+        })
+    
+    return {
+        'participants': participants,
+        'interactions': interactions,
+        'chatSessions': chat_sessions,
+        'pdfSessions': pdf_sessions,
+        'quizResults': quiz_results,
+        'studySessions': study_sessions,
+    }
