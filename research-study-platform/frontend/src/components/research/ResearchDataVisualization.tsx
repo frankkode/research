@@ -508,7 +508,7 @@ const ResearchDataVisualization: React.FC = () => {
             <div>QuizResults Length: {data.quizResults?.length || 0}</div>
             <div>ChartData Length: {chartData?.length || 0}</div>
             <div>Participants Length: {data.participants?.length || 0}</div>
-            <div>Groups in data: {[...new Set(data.participants?.map(p => p.study_group) || [])].join(', ')}</div>
+            <div>Groups in data: {Array.from(new Set(data.participants?.map(p => p.study_group) || [])).join(', ')}</div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="text-center">
