@@ -508,7 +508,7 @@ const Dashboard: React.FC = () => {
         <h3 className="text-lg font-semibold text-yellow-800 mb-2">Information</h3>
         <div className="text-sm text-yellow-700">
           <p><strong>In case of technical issue contact Frank Masabo at:</strong> masabo.frank@iu-study.org</p>
-          <p><strong>Or Whatsupp:</strong> +358451442401</p>
+          <p><strong>Or WhatsApp:</strong> +358451442401</p>
         </div>
       </div>
     </div>
