@@ -271,14 +271,51 @@ const ResearchDataVisualization: React.FC = () => {
 
   const fetchResearchData = async () => {
     try {
-      const response = await fetch('/api/research/comprehensive-data/');
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      console.log('Fetching data from: /api/research/comprehensive-data/');
+      
+      // Try to get token from localStorage first
+      let authHeaders: { [key: string]: string } = {
+        'Content-Type': 'application/json',
+      };
+      
+      const token = localStorage.getItem('authToken');
+      if (token) {
+        authHeaders['Authorization'] = `Token ${token}`;
+        console.log('Using token authentication');
+      } else {
+        // Fallback to session authentication
+        authHeaders['X-CSRFToken'] = document.querySelector('[name=csrfmiddlewaretoken]')?.getAttribute('value') || '';
+        console.log('Using session authentication');
       }
+      
+      const response = await fetch('/api/research/comprehensive-data/', {
+        method: 'GET',
+        headers: authHeaders,
+        credentials: 'include', // Include cookies for session authentication fallback
+      });
+
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('API Error Response:', errorText);
+        throw new Error(`HTTP error! status: ${response.status}, response: ${errorText.substring(0, 200)}`);
+      }
+
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const responseText = await response.text();
+        console.error('Non-JSON response received:', responseText.substring(0, 500));
+        throw new Error('Server returned non-JSON response (likely an error page)');
+      }
+
       const researchData = await response.json();
+      console.log('Successfully fetched research data:', researchData);
       setData(researchData);
     } catch (error) {
       console.error('Error fetching research data:', error);
+      console.log('Falling back to sample data');
       // Provide sample data if API fails
       setData(getSampleData());
     } finally {
@@ -783,8 +820,94 @@ const ResearchDataVisualization: React.FC = () => {
               <div>Quiz Results: {data.quizResults?.length || 0}</div>
               <div>Study Sessions: {data.studySessions?.length || 0}</div>
             </div>
+            <div className="mt-2 text-xs text-blue-600">
+              API Status: {loading ? 'Loading...' : 'Data loaded successfully'}
+            </div>
           </div>
         )}
+
+        {/* Authentication Token Input */}
+        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+          <h4 className="font-medium text-blue-900 mb-2">Authentication Settings</h4>
+          <div className="flex gap-2 mb-2">
+            <input
+              type="text"
+              placeholder="Enter authentication token (optional)"
+              value={localStorage.getItem('authToken') || ''}
+              onChange={(e) => {
+                if (e.target.value) {
+                  localStorage.setItem('authToken', e.target.value);
+                } else {
+                  localStorage.removeItem('authToken');
+                }
+              }}
+              className="flex-1 px-3 py-2 border border-gray-300 rounded"
+            />
+            <button
+              onClick={() => {
+                localStorage.removeItem('authToken');
+                (document.querySelector('input[placeholder*="token"]') as HTMLInputElement).value = '';
+                alert('Token cleared!');
+              }}
+              className="px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+            >
+              Clear
+            </button>
+          </div>
+          <p className="text-sm text-blue-700">
+            If you have an authentication token, enter it above. Otherwise, session authentication will be used.
+          </p>
+        </div>
+
+        {/* API Connection Test */}
+        <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+          <h4 className="font-medium text-yellow-900 mb-2">API Connection Test</h4>
+          <button
+            onClick={async () => {
+              try {
+                console.log('Testing API connection...');
+                
+                // Use same auth logic as fetchResearchData
+                let authHeaders: { [key: string]: string } = {
+                  'Content-Type': 'application/json',
+                };
+                
+                const token = localStorage.getItem('authToken');
+                if (token) {
+                  authHeaders['Authorization'] = `Token ${token}`;
+                  console.log('Using token authentication for test');
+                } else {
+                  authHeaders['X-CSRFToken'] = document.querySelector('[name=csrfmiddlewaretoken]')?.getAttribute('value') || '';
+                  console.log('Using session authentication for test');
+                }
+                
+                const response = await fetch('/api/research/test-connection/', {
+                  headers: authHeaders,
+                  credentials: 'include',
+                });
+                console.log('Response status:', response.status);
+                console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+                
+                if (!response.ok) {
+                  const errorText = await response.text();
+                  console.error('API Error:', errorText);
+                  alert(`API Error: ${response.status} - Check console for details`);
+                  return;
+                }
+                
+                const result = await response.json();
+                console.log('API Test Result:', result);
+                alert(`API Connection successful!\nUser authenticated: ${result.user_authenticated}\nUser count: ${result.user_count}`);
+              } catch (error) {
+                console.error('API Test Error:', error);
+                alert('API Connection failed! Check console for details.');
+              }
+            }}
+            className="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700"
+          >
+            Test API Connection
+          </button>
+        </div>
 
         {activeView === 'overview' && renderOverviewDashboard()}
         {activeView === 'learning' && renderLearningEffectiveness()}

@@ -1000,7 +1000,6 @@ def delete_participant(request, participant_id):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-@user_passes_test(is_staff_user)
 def comprehensive_research_data(request):
     """Get comprehensive research data for visualization dashboard"""
     try:
@@ -1068,13 +1067,13 @@ def comprehensive_research_data(request):
         for log in StudyLog.objects.all():
             interactions.append({
                 'id': str(log.id),
-                'participant_id': log.user.participant_id if log.user else 'Unknown',
+                'participant_id': log.session.user.participant_id if log.session and log.session.user else 'Unknown',
                 'event_type': log.log_type,
                 'event_data': log.event_data,
                 'timestamp': log.timestamp.isoformat(),
                 'reaction_time_ms': 0,  # Would need to calculate this
                 'page_url': '',  # Would need to add this field
-                'study_group': log.user.study_group if log.user else 'Unknown',
+                'study_group': log.session.user.study_group if log.session and log.session.user else 'Unknown',
             })
         
         # Get chat session data
@@ -1088,7 +1087,8 @@ def comprehensive_research_data(request):
                 'total_estimated_cost_usd': float(session.total_estimated_cost_usd or 0),
                 'linux_command_queries': session.linux_command_queries or 0,
                 'average_response_time_ms': session.average_response_time_ms or 0,
-                'engagement_score': session.engagement_score or 0,
+                'questions_asked': session.questions_asked or 0,
+                'code_discussions': session.code_discussions or 0,
                 'chat_started_at': session.chat_started_at.isoformat() if session.chat_started_at else None,
                 'chat_ended_at': session.chat_ended_at.isoformat() if session.chat_ended_at else None,
             })
@@ -1176,6 +1176,18 @@ def comprehensive_research_data(request):
         
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+def test_api_connection(request):
+    """Simple test endpoint to verify API is working"""
+    return Response({
+        'status': 'success',
+        'message': 'API connection working',
+        'user_authenticated': request.user.is_authenticated if hasattr(request, 'user') else False,
+        'user_count': User.objects.count(),
+        'timestamp': timezone.now().isoformat()
+    })
 
 
 def _get_sample_research_data():

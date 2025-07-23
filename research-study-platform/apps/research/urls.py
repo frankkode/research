@@ -20,6 +20,7 @@ urlpatterns = [
     path('export/quiz/', views.export_quiz_responses, name='export_quiz_responses'),
     path('statistics/', views.get_study_statistics, name='get_study_statistics'),
     path('comprehensive-data/', views.comprehensive_research_data, name='comprehensive_research_data'),
+    path('test-connection/', views.test_api_connection, name='test_api_connection'),
     
     # New API endpoints
     path('', include(router.urls)),
