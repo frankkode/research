@@ -122,11 +122,17 @@ const AnalyticsDashboard: React.FC = () => {
       setLoading(true);
       setError(null);
       
+      console.log('🔍 Fetching analytics for study:', studyId);
       const response = await researchApi.getStudyAnalytics(studyId);
+      console.log('📊 Analytics response:', response.data);
       setAnalytics(response.data);
-    } catch (err) {
-      console.error('Error fetching analytics:', err);
-      setError('Failed to fetch analytics data');
+    } catch (err: any) {
+      console.error('❌ Error fetching analytics:', err);
+      if (err.response) {
+        console.error('Response status:', err.response.status);
+        console.error('Response data:', err.response.data);
+      }
+      setError(`Failed to fetch analytics data: ${err.response?.data?.detail || err.message}`);
     } finally {
       setLoading(false);
     }
@@ -224,7 +230,18 @@ const AnalyticsDashboard: React.FC = () => {
     return (
       <div className="p-6">
         <div className="text-center py-8">
-          <div className="text-gray-600">No analytics data available</div>
+          <div className="text-gray-600 mb-4">
+            {studies.length === 0 
+              ? 'No research studies found. Please create a study first.' 
+              : selectedStudy 
+                ? 'No analytics data available for the selected study.'
+                : 'Please select a study to view analytics.'}
+          </div>
+          {studies.length > 0 && !selectedStudy && (
+            <div className="text-sm text-gray-500">
+              Use the study selector in the top right to choose a study.
+            </div>
+          )}
         </div>
       </div>
     );

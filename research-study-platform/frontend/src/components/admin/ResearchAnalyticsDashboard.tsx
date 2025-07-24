@@ -120,11 +120,17 @@ const ResearchAnalyticsDashboard: React.FC = () => {
       setLoading(true);
       setError(null);
       
+      console.log('🔬 Research: Fetching analytics for study:', studyId);
       const response = await researchApi.getStudyAnalytics(studyId);
+      console.log('📈 Research: Analytics response:', response.data);
       setAnalytics(response.data);
-    } catch (err) {
-      console.error('Error fetching analytics:', err);
-      setError('Failed to fetch analytics data');
+    } catch (err: any) {
+      console.error('❌ Research: Error fetching analytics:', err);
+      if (err.response) {
+        console.error('Response status:', err.response.status);
+        console.error('Response data:', err.response.data);
+      }
+      setError(`Failed to fetch research analytics: ${err.response?.data?.detail || err.message}`);
     } finally {
       setLoading(false);
     }
@@ -290,11 +296,26 @@ const ResearchAnalyticsDashboard: React.FC = () => {
     return (
       <div className="p-6">
         <div className="text-center py-8">
-          <div className="text-gray-600">
+          <div className="text-gray-600 mb-4">
             {studies.length === 0 
               ? 'No research studies found. Please create a study first.' 
-              : 'No analytics data available for the selected study.'}
+              : selectedStudy 
+                ? 'No analytics data available for the selected study.'
+                : 'Please select a study to view research analytics.'}
           </div>
+          {studies.length > 0 && !selectedStudy && (
+            <div className="text-sm text-gray-500">
+              Use the study selector in the top right to choose a study.
+            </div>
+          )}
+          {selectedStudy && (
+            <button
+              onClick={() => fetchAnalytics(selectedStudy)}
+              className="bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700 mt-4"
+            >
+              Retry Loading Data
+            </button>
+          )}
         </div>
       </div>
     );

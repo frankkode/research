@@ -859,55 +859,6 @@ const ResearchDataVisualization: React.FC = () => {
           </p>
         </div>
 
-        {/* API Connection Test */}
-        <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-          <h4 className="font-medium text-yellow-900 mb-2">API Connection Test</h4>
-          <button
-            onClick={async () => {
-              try {
-                console.log('Testing API connection...');
-                
-                // Use same auth logic as fetchResearchData
-                let authHeaders: { [key: string]: string } = {
-                  'Content-Type': 'application/json',
-                };
-                
-                const token = localStorage.getItem('authToken');
-                if (token) {
-                  authHeaders['Authorization'] = `Token ${token}`;
-                  console.log('Using token authentication for test');
-                } else {
-                  authHeaders['X-CSRFToken'] = document.querySelector('[name=csrfmiddlewaretoken]')?.getAttribute('value') || '';
-                  console.log('Using session authentication for test');
-                }
-                
-                const response = await fetch('/api/research/test-connection/', {
-                  headers: authHeaders,
-                  credentials: 'include',
-                });
-                console.log('Response status:', response.status);
-                console.log('Response headers:', Object.fromEntries(response.headers.entries()));
-                
-                if (!response.ok) {
-                  const errorText = await response.text();
-                  console.error('API Error:', errorText);
-                  alert(`API Error: ${response.status} - Check console for details`);
-                  return;
-                }
-                
-                const result = await response.json();
-                console.log('API Test Result:', result);
-                alert(`API Connection successful!\nUser authenticated: ${result.user_authenticated}\nUser count: ${result.user_count}`);
-              } catch (error) {
-                console.error('API Test Error:', error);
-                alert('API Connection failed! Check console for details.');
-              }
-            }}
-            className="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700"
-          >
-            Test API Connection
-          </button>
-        </div>
 
         {activeView === 'overview' && renderOverviewDashboard()}
         {activeView === 'learning' && renderLearningEffectiveness()}

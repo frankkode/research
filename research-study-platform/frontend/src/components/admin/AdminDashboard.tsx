@@ -4,10 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   UsersIcon, 
   ChartBarIcon, 
-  DocumentArrowDownIcon,
-  CogIcon,
   EyeIcon,
-  ShieldCheckIcon,
   ClipboardDocumentListIcon,
   BeakerIcon
 } from '@heroicons/react/24/outline';
@@ -17,11 +14,10 @@ import ResearchAnalyticsDashboard from './ResearchAnalyticsDashboard';
 import ComprehensiveAnalyticsDashboard from './ComprehensiveAnalyticsDashboard';
 import ParticipantMonitoringDashboard from './ParticipantMonitoringDashboard';
 import LearningEffectivenessDashboard from './LearningEffectivenessDashboard';
-import DataDebugger from './DataDebugger';
 import ResearchDataVisualization from '../research/ResearchDataVisualization';
 import TestDataVisualization from '../research/TestDataVisualization';
 
-type AdminTab = 'participants' | 'monitoring' | 'analytics' | 'research' | 'effectiveness' | 'comprehensive' | 'visualization' | 'test' | 'export' | 'privacy' | 'utilities' | 'debug';
+type AdminTab = 'participants' | 'monitoring' | 'analytics' | 'research' | 'effectiveness' | 'comprehensive' | 'visualization' | 'test';
 
 const AdminDashboard: React.FC = () => {
   const { user } = useAuth();
@@ -87,30 +83,6 @@ const AdminDashboard: React.FC = () => {
       icon: ChartBarIcon,
       description: 'Test visualization components with sample data'
     },
-    {
-      id: 'export' as AdminTab,
-      name: 'Data Export',
-      icon: DocumentArrowDownIcon,
-      description: 'Export data for analysis'
-    },
-    {
-      id: 'privacy' as AdminTab,
-      name: 'Privacy',
-      icon: ShieldCheckIcon,
-      description: 'GDPR compliance and data protection'
-    },
-    {
-      id: 'utilities' as AdminTab,
-      name: 'Utilities',
-      icon: CogIcon,
-      description: 'Research tools and validation'
-    },
-    {
-      id: 'debug' as AdminTab,
-      name: 'Debug Data',
-      icon: BeakerIcon,
-      description: 'Test API endpoints and diagnose data issues'
-    }
   ];
 
   const renderTabContent = () => {
@@ -131,14 +103,6 @@ const AdminDashboard: React.FC = () => {
         return <ResearchDataVisualization />;
       case 'test':
         return <TestDataVisualization />;
-      case 'export':
-        return <div className="p-6">Data export functionality coming soon...</div>;
-      case 'privacy':
-        return <div className="p-6">Privacy compliance tools coming soon...</div>;
-      case 'utilities':
-        return <div className="p-6">Research utilities coming soon...</div>;
-      case 'debug':
-        return <DataDebugger />;
       default:
         return <ComprehensiveAnalyticsDashboard />;
     }

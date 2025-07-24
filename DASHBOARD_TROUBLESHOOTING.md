@@ -46,9 +46,9 @@ python manage.py populate_test_data --participants 50
 
 **Fix:** Run migrations
 ```bash
-python manage.py migrate
-python manage.py makemigrations
-python manage.py migrate
+python3 manage.py migrate
+python3 manage.py makemigrations
+python3 manage.py migrate
 ```
 
 ### Solution 3: Authentication Problems
