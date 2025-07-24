@@ -80,8 +80,9 @@ const LearningEffectivenessDashboard: React.FC = () => {
       toast.error('Failed to load learning effectiveness data');
       // Generate sample data as fallback for development/testing
       console.log('🔄 Using fallback mock data for development');
-      const mockQuizComparisons = [
+      const mockQuizComparisons: QuizComparison[] = [
         {
+          question_id: "q1",
           question_text: "What command lists files in a directory?",
           difficulty_level: "Easy",
           chatgpt_accuracy: 85.7,
@@ -90,6 +91,7 @@ const LearningEffectivenessDashboard: React.FC = () => {
           improvement_pdf: 8.9
         },
         {
+          question_id: "q2",
           question_text: "How do you change file permissions?",
           difficulty_level: "Medium", 
           chatgpt_accuracy: 72.1,
@@ -98,6 +100,7 @@ const LearningEffectivenessDashboard: React.FC = () => {
           improvement_pdf: 18.7
         },
         {
+          question_id: "q3",
           question_text: "What's the difference between rm and rmdir?",
           difficulty_level: "Medium",
           chatgpt_accuracy: 68.9,
