@@ -70,5 +70,8 @@ urlpatterns = [
     path('utilities/study-stats/', utility_views.get_study_statistics, name='get_study_statistics'),
     path('utilities/available-groups/', utility_views.get_available_groups, name='get_available_groups'),
     
+    # Explicit learning effectiveness endpoint (for frontend compatibility)
+    path('dashboard/learning_effectiveness/', views.ResearchDashboardView.as_view({'get': 'learning_effectiveness'}), name='learning_effectiveness'),
+    
     # Legacy endpoints (moved to top of file to avoid router conflicts)
 ]

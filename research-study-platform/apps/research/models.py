@@ -44,7 +44,8 @@ class ResearchStudy(BaseModel):
         total = self.participant_count
         if total == 0:
             return 0
-        completed = self.participants.filter(study_completed=True).count()
+        # FIXED: Using user__study_completed instead of study_completed
+        completed = self.participants.filter(user__study_completed=True).count()
         return (completed / total) * 100
 
 
