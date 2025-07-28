@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { researchApi } from '../../services/api';
 import { BarChart, PieChart } from '../charts';
 import toast from 'react-hot-toast';
+import { getAnonymizedDisplayName, getPartialHash } from '../../utils/privacy';
 
 interface Participant {
   id: string;
@@ -118,8 +119,9 @@ const ParticipantMonitoringDashboard: React.FC = () => {
     if (searchTerm) {
       filtered = filtered.filter(p => 
         p.participant_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.username.toLowerCase().includes(searchTerm.toLowerCase())
+        getAnonymizedDisplayName(p).toLowerCase().includes(searchTerm.toLowerCase()) ||
+        getPartialHash(p.id).toLowerCase().includes(searchTerm.toLowerCase()) ||
+        getPartialHash(p.email).toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -264,7 +266,7 @@ const ParticipantMonitoringDashboard: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <input
             type="text"
-            placeholder="Search participants..."
+            placeholder="Search by participant ID or hash..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
@@ -329,9 +331,9 @@ const ParticipantMonitoringDashboard: React.FC = () => {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
                       <div className="text-sm font-medium text-gray-900">
-                        {participant.participant_id}
+                        {getAnonymizedDisplayName(participant)}
                       </div>
-                      <div className="text-sm text-gray-500">{participant.email}</div>
+                      <div className="text-sm text-gray-500">Hash: {getPartialHash(participant.email)}</div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -404,10 +406,10 @@ const ParticipantMonitoringDashboard: React.FC = () => {
               
               <div className="space-y-3">
                 <div>
-                  <strong>ID:</strong> {selectedParticipant.participant_id}
+                  <strong>Participant:</strong> {getAnonymizedDisplayName(selectedParticipant)}
                 </div>
                 <div>
-                  <strong>Email:</strong> {selectedParticipant.email}
+                  <strong>Hash:</strong> {getPartialHash(selectedParticipant.email)}
                 </div>
                 <div>
                   <strong>Group:</strong> {selectedParticipant.study_group}

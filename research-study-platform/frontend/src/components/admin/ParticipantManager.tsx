@@ -13,6 +13,7 @@ import {
 import { User } from '../../types';
 import { researchApi } from '../../services/api';
 import LoadingSpinner from '../common/LoadingSpinner';
+import { getAnonymizedDisplayName, anonymizeEmail, getPartialHash } from '../../utils/privacy';
 
 interface ParticipantStats {
   total: number;
@@ -83,12 +84,13 @@ const ParticipantManager: React.FC = () => {
   const filterParticipants = () => {
     let filtered = participants;
 
-    // Search filter
+    // Search filter (now works with anonymized data)
     if (searchTerm) {
       filtered = filtered.filter(p =>
-        p.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        getAnonymizedDisplayName(p).toLowerCase().includes(searchTerm.toLowerCase()) ||
         p.participant_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.email.toLowerCase().includes(searchTerm.toLowerCase())
+        getPartialHash(p.id).toLowerCase().includes(searchTerm.toLowerCase()) ||
+        getPartialHash(p.email).toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -245,7 +247,7 @@ const ParticipantManager: React.FC = () => {
             <MagnifyingGlassIcon className="h-5 w-5 absolute left-3 top-3 text-gray-400" />
             <input
               type="text"
-              placeholder="Search participants..."
+              placeholder="Search by participant ID or hash..."
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -287,7 +289,8 @@ const ParticipantManager: React.FC = () => {
           
           <div className="bg-blue-50 border border-blue-200 rounded-md px-3 sm:px-4 py-2">
             <p className="text-blue-800 text-xs sm:text-sm">
-              <strong>Participants self-register</strong> at the main registration page
+              <strong>Privacy:</strong> User identities are anonymized with hash identifiers to protect participant privacy. 
+              <strong>Participants self-register</strong> at the main registration page.
             </p>
           </div>
         </div>
@@ -324,12 +327,12 @@ const ParticipantManager: React.FC = () => {
                 <td className="px-3 sm:px-6 py-4">
                   <div>
                     <div className="text-sm font-medium text-gray-900">
-                      {participant.username}
+                      {getAnonymizedDisplayName(participant)}
                     </div>
                     <div className="text-xs sm:text-sm text-gray-500">
-                      <span className="block sm:inline">{participant.participant_id}</span>
+                      <span className="block sm:inline">ID: {getPartialHash(participant.id)}</span>
                       <span className="hidden sm:inline"> • </span>
-                      <span className="block sm:inline">{participant.email}</span>
+                      <span className="block sm:inline">Hash: {getPartialHash(participant.email)}</span>
                     </div>
                   </div>
                 </td>
@@ -422,7 +425,7 @@ const ParticipantDetailsModal: React.FC<{
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg p-4 sm:p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <h3 className="text-lg font-medium text-gray-900 mb-4">
-          Participant Details: {participant.username}
+          Participant Details: {getAnonymizedDisplayName(participant)}
         </h3>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
@@ -435,9 +438,9 @@ const ParticipantDetailsModal: React.FC<{
           
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Email
+              User Hash
             </label>
-            <p className="text-sm text-gray-900">{participant.email}</p>
+            <p className="text-sm text-gray-900">{getPartialHash(participant.email)}</p>
           </div>
           
           <div>

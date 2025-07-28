@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, ScatterChart, Scatter,
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
 import { researchApi } from '../../services/api';
 
@@ -90,7 +89,6 @@ interface StudySessionData {
   session_started_at: string;
 }
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'];
 
 // Utility function to safely calculate averages and prevent NaN
 const safeAverage = (values: number[], defaultValue: number = 0): number => {
@@ -122,12 +120,6 @@ const safeAverage = (values: number[], defaultValue: number = 0): number => {
   return result;
 };
 
-// Utility function to safely calculate percentages
-const safePercentage = (numerator: number, denominator: number, defaultValue: number = 0): number => {
-  if (!denominator || denominator === 0 || isNaN(numerator) || isNaN(denominator)) return defaultValue;
-  const result = (numerator / denominator) * 100;
-  return isNaN(result) ? defaultValue : Math.round(result * 10) / 10;
-};
 
 const getSampleData = (): ResearchData => {
   const now = new Date();
@@ -263,8 +255,6 @@ const getSampleData = (): ResearchData => {
 const ResearchDataVisualization: React.FC = () => {
   const [data, setData] = useState<ResearchData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeView, setActiveView] = useState<string>('learning');
-  const [selectedGroup, setSelectedGroup] = useState<'ALL' | 'PDF' | 'CHATGPT'>('ALL');
 
   useEffect(() => {
     fetchResearchData();
@@ -325,10 +315,6 @@ const ResearchDataVisualization: React.FC = () => {
     }
   };
 
-  const filterDataByGroup = (dataArray: any[]) => {
-    if (selectedGroup === 'ALL') return dataArray;
-    return dataArray.filter(item => item.study_group === selectedGroup);
-  };
 
 
   const renderLearningEffectiveness = () => {
@@ -524,144 +510,6 @@ const ResearchDataVisualization: React.FC = () => {
     );
   };
 
-  const renderInteractionAnalysis = () => {
-    if (!data) return null;
-
-    const interactionsByType = data.interactions.reduce((acc, interaction) => {
-      const type = interaction.event_type;
-      acc[type] = (acc[type] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-
-    const interactionChartData = Object.entries(interactionsByType).map(([type, count]) => ({
-      type,
-      count
-    }));
-
-    const groupInteractions = data.interactions.reduce((acc, interaction) => {
-      const group = interaction.study_group;
-      acc[group] = (acc[group] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-
-    const groupInteractionData = Object.entries(groupInteractions).map(([group, count]) => ({
-      group,
-      count
-    }));
-
-    return (
-      <div className="space-y-6">
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold mb-4">Interaction Types Distribution</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={interactionChartData.slice(0, 10)}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="type" angle={-45} textAnchor="end" height={80} />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="count" fill="#8884d8" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold mb-4">Interactions by Study Group</h3>
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={groupInteractionData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="group" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="count" fill="#82ca9d" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-    );
-  };
-
-  const renderEngagementMetrics = () => {
-    if (!data) return null;
-
-    const chatEngagement = filterDataByGroup(data.chatSessions).map(session => ({
-      participant_id: session.participant_id,
-      engagement_score: session.engagement_score,
-      total_messages: session.total_messages,
-      avg_response_time: session.average_response_time_ms / 1000,
-      linux_commands: session.linux_command_queries
-    }));
-
-    const pdfEngagement = filterDataByGroup(data.pdfSessions).map(session => ({
-      participant_id: session.participant_id,
-      reading_completion: session.reading_completion_percentage,
-      time_spent: session.total_time_spent_minutes,
-      pages_visited: session.pages_visited_count,
-      reading_speed: session.reading_speed_wpm
-    }));
-
-    return (
-      <div className="space-y-6">
-        {selectedGroup !== 'PDF' && (
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-lg font-semibold mb-4">ChatGPT Engagement Analysis</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <ScatterChart data={chatEngagement}>
-                <CartesianGrid />
-                <XAxis dataKey="total_messages" name="Total Messages" />
-                <YAxis dataKey="engagement_score" name="Engagement Score" />
-                <Tooltip cursor={{ strokeDasharray: '3 3' }} />
-                <Scatter fill="#8884d8" />
-              </ScatterChart>
-            </ResponsiveContainer>
-          </div>
-        )}
-
-        {selectedGroup !== 'CHATGPT' && (
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-lg font-semibold mb-4">PDF Reading Behavior Analysis</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <ScatterChart data={pdfEngagement}>
-                <CartesianGrid />
-                <XAxis dataKey="time_spent" name="Time Spent (minutes)" />
-                <YAxis dataKey="reading_completion" name="Reading Completion %" />
-                <Tooltip cursor={{ strokeDasharray: '3 3' }} />
-                <Scatter fill="#82ca9d" />
-              </ScatterChart>
-            </ResponsiveContainer>
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  const renderTimelineAnalysis = () => {
-    if (!data) return null;
-
-    const dailyParticipation = data.studySessions.reduce((acc, session) => {
-      const date = new Date(session.session_started_at).toDateString();
-      acc[date] = (acc[date] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-
-    const timelineData = Object.entries(dailyParticipation)
-      .sort(([a], [b]) => new Date(a).getTime() - new Date(b).getTime())
-      .map(([date, count]) => ({ date, count }));
-
-    return (
-      <div className="bg-white p-6 rounded-lg shadow">
-        <h3 className="text-lg font-semibold mb-4">Study Participation Timeline</h3>
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={timelineData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="date" angle={-45} textAnchor="end" height={80} />
-            <YAxis />
-            <Tooltip />
-            <Line type="monotone" dataKey="count" stroke="#8884d8" strokeWidth={2} />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-    );
-  };
 
   if (loading) {
     return (
@@ -676,40 +524,10 @@ const ResearchDataVisualization: React.FC = () => {
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-900 mb-4">Research Data Visualization</h1>
         
-        <div className="flex flex-wrap gap-4 mb-4">
-          <div className="flex gap-2">
-            {['learning', 'interactions', 'engagement', 'timeline'].map((view) => (
-              <button
-                key={view}
-                onClick={() => setActiveView(view)}
-                className={`px-4 py-2 rounded-lg capitalize font-medium transition-colors ${
-                  activeView === view
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                {view === 'learning' ? 'Learning Effectiveness' : view}
-              </button>
-            ))}
-          </div>
-          
-          <select
-            value={selectedGroup}
-            onChange={(e) => setSelectedGroup(e.target.value as 'ALL' | 'PDF' | 'CHATGPT')}
-            className="px-4 py-2 border border-gray-300 rounded-lg bg-white"
-          >
-            <option value="ALL">All Groups</option>
-            <option value="PDF">PDF Group</option>
-            <option value="CHATGPT">ChatGPT Group</option>
-          </select>
-        </div>
       </div>
 
       <div className="space-y-6">
-        {activeView === 'learning' && renderLearningEffectiveness()}
-        {activeView === 'interactions' && renderInteractionAnalysis()}
-        {activeView === 'engagement' && renderEngagementMetrics()}
-        {activeView === 'timeline' && renderTimelineAnalysis()}
+        {renderLearningEffectiveness()}
       </div>
     </div>
   );
