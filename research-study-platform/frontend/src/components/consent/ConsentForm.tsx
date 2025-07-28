@@ -74,8 +74,9 @@ const ConsentForm: React.FC = () => {
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-2">Principal Investigator:</h3>
                   <p>Researcher:Mr, Frank Masabo<br />
+                  Bachelor of Science in Computer Science<br />
                   Department:Computer Science <br />
-                  <br />- International University of Applied Sciences</p>
+                  <br />Institution: International University of Applied Sciences</p>
                 </div>
 
                 <div>

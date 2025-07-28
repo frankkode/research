@@ -49,14 +49,20 @@ const ParticipantManager: React.FC = () => {
   const loadParticipants = async () => {
     try {
       setIsLoading(true);
+      console.log('🔍 Loading participants from database...');
       const response = await researchApi.getAllParticipants();
       const participantsData: User[] = response.data;
       
       setParticipants(participantsData);
       calculateStats(participantsData);
+      console.log('✅ Successfully loaded participants from database:', participantsData.length, 'participants');
     } catch (error: any) {
-      console.error('Error loading participants:', error);
-      const errorMessage = error.response?.data?.error || 'Failed to load participants';
+      console.error('❌ Error loading participants:', error);
+      if (error.response) {
+        console.error('Response status:', error.response.status);
+        console.error('Response data:', error.response.data);
+      }
+      const errorMessage = error.response?.data?.error || error.response?.data?.detail || 'Failed to load participants';
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);
@@ -115,9 +121,9 @@ const ParticipantManager: React.FC = () => {
       setParticipants(prev => 
         prev.map(p => p.id === participantId ? { ...p, ...updates } : p)
       );
-      toast.success('Participant updated successfully');
+      console.log('✅ Participant updated successfully (mock operation)');
     } catch (error) {
-      toast.error('Failed to update participant');
+      console.error('❌ Failed to update participant:', error);
     }
   };
 
@@ -127,15 +133,22 @@ const ParticipantManager: React.FC = () => {
     }
 
     try {
+      console.log('🗑️ Deleting participant from database:', participantId);
+      
       // Call the API to delete from database
       await researchApi.deleteParticipant(participantId);
       
       // Update local state only after successful API call
       setParticipants(prev => prev.filter(p => p.id !== participantId));
       toast.success('Participant deleted successfully from database');
+      console.log('✅ Participant deleted successfully from database');
     } catch (error: any) {
-      console.error('Error deleting participant:', error);
-      const errorMessage = error.response?.data?.error || 'Failed to delete participant';
+      console.error('❌ Error deleting participant:', error);
+      if (error.response) {
+        console.error('Response status:', error.response.status);
+        console.error('Response data:', error.response.data);
+      }
+      const errorMessage = error.response?.data?.error || error.response?.data?.detail || 'Failed to delete participant';
       toast.error(errorMessage);
     }
   };

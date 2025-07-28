@@ -43,12 +43,19 @@ const ParticipantMonitoringDashboard: React.FC = () => {
   const fetchParticipants = async () => {
     try {
       setLoading(true);
+      console.log('🔍 Loading participants for monitoring from database...');
       const response = await researchApi.getAllParticipants();
       setParticipants(response.data);
       setFilteredParticipants(response.data);
-    } catch (error) {
-      console.error('Error fetching participants:', error);
-      toast.error('Failed to load participants');
+      console.log('✅ Successfully loaded participants for monitoring:', response.data.length, 'participants');
+    } catch (error: any) {
+      console.error('❌ Error fetching participants for monitoring:', error);
+      if (error.response) {
+        console.error('Response status:', error.response.status);
+        console.error('Response data:', error.response.data);
+      }
+      const errorMessage = error.response?.data?.error || error.response?.data?.detail || 'Failed to load participants';
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -68,8 +75,12 @@ const ParticipantMonitoringDashboard: React.FC = () => {
         last_activity: new Date().toISOString()
       };
       setParticipantSummary(mockSummary);
-    } catch (error) {
-      console.error('Error fetching participant summary:', error);
+    } catch (error: any) {
+      console.error('❌ Error fetching participant summary:', error);
+      if (error.response) {
+        console.error('Response status:', error.response.status);
+        console.error('Response data:', error.response.data);
+      }
       toast.error('Failed to load participant summary');
     } finally {
       setSummaryLoading(false);

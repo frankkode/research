@@ -56,7 +56,7 @@ const LearningEffectivenessDashboard: React.FC = () => {
   const fetchLearningEffectivenessData = async () => {
     try {
       setLoading(true);
-      console.log('🔍 Fetching learning effectiveness data...');
+      console.log('🔍 Fetching learning effectiveness data from database...');
       const response = await researchApi.getLearningEffectivenessData();
       const data = response.data;
       
@@ -77,9 +77,11 @@ const LearningEffectivenessDashboard: React.FC = () => {
         console.error('Response status:', error.response.status);
         console.error('Response data:', error.response.data);
       }
-      toast.error('Failed to load learning effectiveness data');
-      // Generate sample data as fallback for development/testing
-      console.log('🔄 Using fallback mock data for development');
+      const errorMessage = error.response?.data?.error || error.response?.data?.detail || 'Failed to load learning effectiveness data';
+      toast.error(errorMessage);
+      
+      // Generate sample data as fallback for development/testing if API fails
+      console.log('🔄 Using fallback mock data due to API error');
       const mockQuizComparisons: QuizComparison[] = [
         {
           question_id: "q1",

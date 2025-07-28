@@ -3,6 +3,7 @@ import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, ScatterChart, Scatter,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
+import { researchApi } from '../../services/api';
 
 interface ResearchData {
   participants: ParticipantData[];
@@ -262,7 +263,7 @@ const getSampleData = (): ResearchData => {
 const ResearchDataVisualization: React.FC = () => {
   const [data, setData] = useState<ResearchData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeView, setActiveView] = useState<string>('overview');
+  const [activeView, setActiveView] = useState<string>('learning');
   const [selectedGroup, setSelectedGroup] = useState<'ALL' | 'PDF' | 'CHATGPT'>('ALL');
 
   useEffect(() => {
@@ -271,51 +272,52 @@ const ResearchDataVisualization: React.FC = () => {
 
   const fetchResearchData = async () => {
     try {
-      console.log('Fetching data from: /api/research/comprehensive-data/');
+      console.log('🔍 Fetching real research data from database...');
       
-      // Try to get token from localStorage first
-      let authHeaders: { [key: string]: string } = {
-        'Content-Type': 'application/json',
-      };
+      // Use the proper API endpoints that actually exist
+      const [participantsRes, learningRes] = await Promise.all([
+        researchApi.getAllParticipants(),
+        researchApi.getLearningEffectivenessData()
+      ]);
+
+      // Transform the real data into the expected format
+      const participants = participantsRes.data;
+      const learningData = learningRes.data;
       
-      const token = localStorage.getItem('authToken');
-      if (token) {
-        authHeaders['Authorization'] = `Token ${token}`;
-        console.log('Using token authentication');
-      } else {
-        // Fallback to session authentication
-        authHeaders['X-CSRFToken'] = document.querySelector('[name=csrfmiddlewaretoken]')?.getAttribute('value') || '';
-        console.log('Using session authentication');
-      }
-      
-      const response = await fetch('/api/research/comprehensive-data/', {
-        method: 'GET',
-        headers: authHeaders,
-        credentials: 'include', // Include cookies for session authentication fallback
+      console.log('✅ Successfully fetched real research data:', {
+        participantsCount: participants.length,
+        learningData: learningData
       });
 
-      console.log('Response status:', response.status);
-      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+      // Create research data structure from real API responses
+      const researchData: ResearchData = {
+        participants: participants.map((p: any) => ({
+          id: p.id,
+          participant_id: p.participant_id,
+          study_group: p.study_group,
+          age_range: p.age_range || 'Unknown',
+          education_level: p.education_level || 'Unknown',
+          technical_background: p.technical_background || 'Unknown',
+          consent_given: p.consent_completed,
+          completion_percentage: p.completion_percentage,
+          total_study_time: p.total_study_time || 0,
+          created_at: p.created_at
+        })),
+        interactions: [], // TODO: Add when interaction endpoint is available
+        chatSessions: [], // TODO: Add when chat sessions endpoint is available
+        pdfSessions: [], // TODO: Add when PDF sessions endpoint is available
+        quizResults: [], // TODO: Add when quiz results endpoint is available
+        studySessions: [] // TODO: Add when study sessions endpoint is available
+      };
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('API Error Response:', errorText);
-        throw new Error(`HTTP error! status: ${response.status}, response: ${errorText.substring(0, 200)}`);
-      }
-
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        const responseText = await response.text();
-        console.error('Non-JSON response received:', responseText.substring(0, 500));
-        throw new Error('Server returned non-JSON response (likely an error page)');
-      }
-
-      const researchData = await response.json();
-      console.log('Successfully fetched research data:', researchData);
       setData(researchData);
-    } catch (error) {
-      console.error('Error fetching research data:', error);
-      console.log('Falling back to sample data');
+    } catch (error: any) {
+      console.error('❌ Error fetching real research data:', error);
+      if (error.response) {
+        console.error('Response status:', error.response.status);
+        console.error('Response data:', error.response.data);
+      }
+      console.log('🎭 Falling back to sample data for demonstration');
       // Provide sample data if API fails
       setData(getSampleData());
     } finally {
@@ -328,103 +330,6 @@ const ResearchDataVisualization: React.FC = () => {
     return dataArray.filter(item => item.study_group === selectedGroup);
   };
 
-  const renderOverviewDashboard = () => {
-    if (!data) return null;
-
-    console.log('Participants Data:', data.participants); // Debug log
-
-    const participants = filterDataByGroup(data.participants);
-    const completionData = [
-      { name: 'Completed', value: participants.filter(p => p.completion_percentage === 100).length },
-      { name: 'In Progress', value: participants.filter(p => p.completion_percentage > 0 && p.completion_percentage < 100).length },
-      { name: 'Not Started', value: participants.filter(p => p.completion_percentage === 0).length }
-    ];
-
-    let groupDistribution = [
-      { name: 'PDF Group', value: data.participants.filter(p => p.study_group === 'PDF').length },
-      { name: 'ChatGPT Group', value: data.participants.filter(p => p.study_group === 'CHATGPT').length }
-    ];
-
-    // If no group data, provide sample data
-    if (groupDistribution.every(g => g.value === 0)) {
-      groupDistribution = [
-        { name: 'PDF Group', value: 12 },
-        { name: 'ChatGPT Group', value: 12 }
-      ];
-    }
-
-    console.log('Group Distribution:', groupDistribution); // Debug log
-
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold mb-4">Study Completion Status</h3>
-          <ResponsiveContainer width="100%" height={200}>
-            <PieChart>
-              <Pie
-                data={completionData}
-                cx="50%"
-                cy="50%"
-                outerRadius={60}
-                fill="#8884d8"
-                dataKey="value"
-                label={({name, value}) => `${name}: ${value}`}
-              >
-                {completionData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold mb-4">Group Distribution</h3>
-          <ResponsiveContainer width="100%" height={200}>
-            <PieChart>
-              <Pie
-                data={groupDistribution}
-                cx="50%"
-                cy="50%"
-                outerRadius={60}
-                fill="#82ca9d"
-                dataKey="value"
-                label={({name, value}) => `${name}: ${value}`}
-              >
-                {groupDistribution.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-semibold mb-4">Key Metrics</h3>
-          <div className="space-y-3">
-            <div className="flex justify-between">
-              <span>Total Participants:</span>
-              <span className="font-semibold">{participants.length}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Completion Rate:</span>
-              <span className="font-semibold">
-                {safePercentage(participants.filter(p => p.completion_percentage === 100).length, participants.length)}%
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span>Avg Study Time:</span>
-              <span className="font-semibold">
-                {safeAverage(participants.map(p => p.total_study_time))} min
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
 
   const renderLearningEffectiveness = () => {
     if (!data) return null;
@@ -503,13 +408,6 @@ const ResearchDataVisualization: React.FC = () => {
         {/* Statistical Analysis Section */}
         <div className="bg-white p-6 rounded-lg shadow">
           <h3 className="text-lg font-semibold mb-4">Statistical Analysis</h3>
-          {/* Debug info for troubleshooting */}
-          <div className="mb-4 p-3 bg-gray-50 rounded text-xs">
-            <div>QuizResults Length: {data.quizResults?.length || 0}</div>
-            <div>ChartData Length: {chartData?.length || 0}</div>
-            <div>Participants Length: {data.participants?.length || 0}</div>
-            <div>Groups in data: {Array.from(new Set(data.participants?.map(p => p.study_group) || [])).join(', ')}</div>
-          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="text-center">
               <div className="text-sm text-gray-600 mb-2">Learning Gain</div>
@@ -780,7 +678,7 @@ const ResearchDataVisualization: React.FC = () => {
         
         <div className="flex flex-wrap gap-4 mb-4">
           <div className="flex gap-2">
-            {['overview', 'learning', 'interactions', 'engagement', 'timeline'].map((view) => (
+            {['learning', 'interactions', 'engagement', 'timeline'].map((view) => (
               <button
                 key={view}
                 onClick={() => setActiveView(view)}
@@ -808,59 +706,6 @@ const ResearchDataVisualization: React.FC = () => {
       </div>
 
       <div className="space-y-6">
-        {/* Debug Info */}
-        {data && (
-          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-            <h4 className="font-medium text-blue-900 mb-2">Data Status</h4>
-            <div className="text-sm text-blue-700 grid grid-cols-2 md:grid-cols-6 gap-2">
-              <div>Participants: {data.participants?.length || 0}</div>
-              <div>Interactions: {data.interactions?.length || 0}</div>
-              <div>Chat Sessions: {data.chatSessions?.length || 0}</div>
-              <div>PDF Sessions: {data.pdfSessions?.length || 0}</div>
-              <div>Quiz Results: {data.quizResults?.length || 0}</div>
-              <div>Study Sessions: {data.studySessions?.length || 0}</div>
-            </div>
-            <div className="mt-2 text-xs text-blue-600">
-              API Status: {loading ? 'Loading...' : 'Data loaded successfully'}
-            </div>
-          </div>
-        )}
-
-        {/* Authentication Token Input */}
-        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-          <h4 className="font-medium text-blue-900 mb-2">Authentication Settings</h4>
-          <div className="flex gap-2 mb-2">
-            <input
-              type="text"
-              placeholder="Enter authentication token (optional)"
-              value={localStorage.getItem('authToken') || ''}
-              onChange={(e) => {
-                if (e.target.value) {
-                  localStorage.setItem('authToken', e.target.value);
-                } else {
-                  localStorage.removeItem('authToken');
-                }
-              }}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded"
-            />
-            <button
-              onClick={() => {
-                localStorage.removeItem('authToken');
-                (document.querySelector('input[placeholder*="token"]') as HTMLInputElement).value = '';
-                alert('Token cleared!');
-              }}
-              className="px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-            >
-              Clear
-            </button>
-          </div>
-          <p className="text-sm text-blue-700">
-            If you have an authentication token, enter it above. Otherwise, session authentication will be used.
-          </p>
-        </div>
-
-
-        {activeView === 'overview' && renderOverviewDashboard()}
         {activeView === 'learning' && renderLearningEffectiveness()}
         {activeView === 'interactions' && renderInteractionAnalysis()}
         {activeView === 'engagement' && renderEngagementMetrics()}

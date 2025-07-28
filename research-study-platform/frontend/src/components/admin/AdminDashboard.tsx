@@ -9,20 +9,16 @@ import {
   BeakerIcon
 } from '@heroicons/react/24/outline';
 import ParticipantManager from './ParticipantManager';
-import AnalyticsDashboard from './AnalyticsDashboard';
-import ResearchAnalyticsDashboard from './ResearchAnalyticsDashboard';
-import ComprehensiveAnalyticsDashboard from './ComprehensiveAnalyticsDashboard';
 import ParticipantMonitoringDashboard from './ParticipantMonitoringDashboard';
 import LearningEffectivenessDashboard from './LearningEffectivenessDashboard';
 import ResearchDataVisualization from '../research/ResearchDataVisualization';
-import TestDataVisualization from '../research/TestDataVisualization';
 
-type AdminTab = 'participants' | 'monitoring' | 'analytics' | 'research' | 'effectiveness' | 'comprehensive' | 'visualization' | 'test';
+type AdminTab = 'participants' | 'monitoring' | 'effectiveness' | 'visualization';
 
 const AdminDashboard: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<AdminTab>('comprehensive');
+  const [activeTab, setActiveTab] = useState<AdminTab>('effectiveness');
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -48,40 +44,16 @@ const AdminDashboard: React.FC = () => {
       description: 'Real-time participant monitoring and progress tracking'
     },
     {
-      id: 'comprehensive' as AdminTab,
-      name: 'Overview',
-      icon: ChartBarIcon,
-      description: 'Comprehensive research analytics dashboard with all key metrics'
-    },
-    {
       id: 'effectiveness' as AdminTab,
       name: 'Learning Analysis',
       icon: BeakerIcon,
       description: 'Learning effectiveness comparison between ChatGPT and PDF groups'
     },
     {
-      id: 'analytics' as AdminTab,
-      name: 'Basic Analytics',
-      icon: ChartBarIcon,
-      description: 'View basic study statistics and performance'
-    },
-    {
-      id: 'research' as AdminTab,
-      name: 'Research Data',
-      icon: BeakerIcon,
-      description: 'Original research analytics with detailed charts'
-    },
-    {
       id: 'visualization' as AdminTab,
       name: 'Data Visualization',
       icon: ChartBarIcon,
       description: 'Interactive research data visualization dashboard'
-    },
-    {
-      id: 'test' as AdminTab,
-      name: 'Test Charts',
-      icon: ChartBarIcon,
-      description: 'Test visualization components with sample data'
     },
   ];
 
@@ -91,20 +63,12 @@ const AdminDashboard: React.FC = () => {
         return <ParticipantManager />;
       case 'monitoring':
         return <ParticipantMonitoringDashboard />;
-      case 'comprehensive':
-        return <ComprehensiveAnalyticsDashboard />;
       case 'effectiveness':
         return <LearningEffectivenessDashboard />;
-      case 'analytics':
-        return <AnalyticsDashboard />;
-      case 'research':
-        return <ResearchAnalyticsDashboard />;
       case 'visualization':
         return <ResearchDataVisualization />;
-      case 'test':
-        return <TestDataVisualization />;
       default:
-        return <ComprehensiveAnalyticsDashboard />;
+        return <LearningEffectivenessDashboard />;
     }
   };
 
